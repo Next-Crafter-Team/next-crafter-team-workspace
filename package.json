@@ -10,7 +10,7 @@
   "scripts": {
     "dev:convex": "convex dev",
     "dev:mobile": "npm run start --workspace apps/mobile",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspace apps/mobile",
     "test": "vitest run"
   },
   "repository": {
