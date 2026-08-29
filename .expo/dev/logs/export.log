@@ -1,7 +1,0 @@
-{"_e":"root:init","_t":1788040100162,"format":"v0-jsonl","version":"57.0.20"}
-{"_e":"env:mode","_t":1788040100302,"nodeEnv":"production","babelEnv":"production","mode":"production"}
-{"_e":"env:load","_t":1788040100305,"mode":"production","files":["../..\\..\\.env.local"],"env":{"CONVEX_DEPLOYMENT":"anonymous:anonymous-agent","CONVEX_SITE_URL":"http://127.0.0.1:3211","CONVEX_URL":"http://127.0.0.1:3210"}}
-{"_e":"devserver:start","_t":1788040100323,"mode":"production","web":true,"baseUrl":"","asyncRoutes":false,"routerRoot":"../..\\..\\app","serverComponents":false,"serverActions":false,"serverRendering":false,"apiRoutes":false,"exporting":true}
-{"_e":"metro:config","_t":1788040100529,"serverRoot":"../..\\..","projectRoot":"../..\\..","exporting":true,"flags":{"autolinkingModuleResolution":false,"serverActions":false,"serverComponents":false,"reactCompiler":false,"optimizeGraph":false,"treeshaking":false,"logbox":false}}
-{"_e":"metro:instantiate","_t":1788040100643,"atlas":false,"workers":14,"host":null,"port":null}
-{"_e":"metro:bundling:started","_t":1788040100894,"id":"1","platform":"web","environment":null,"entry":"node_modules\\expo\\AppEntry.js"}
