@@ -4,3 +4,6 @@ convex/_generated/
 # Local Pi runtime state
 .atl/
 .codegraph/
+
+# Expo build artifacts
+.expo/

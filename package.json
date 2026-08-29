@@ -1,10 +1,17 @@
 {
   "name": "next-crafter-team-workspace",
   "version": "1.0.0",
+  "private": true,
   "description": "",
-  "main": "index.js",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:convex": "convex dev",
+    "dev:mobile": "npm run start --workspace apps/mobile",
+    "typecheck": "tsc --noEmit && npm run typecheck --workspace apps/mobile",
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",
@@ -19,5 +26,12 @@
   "homepage": "https://github.com/Next-Crafter-Team/next-crafter-team-workspace#readme",
   "dependencies": {
     "convex": "^1.45.0"
+  },
+  "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
+    "@types/node": "^26.4.0",
+    "convex-test": "^0.0.56",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
   }
 }
