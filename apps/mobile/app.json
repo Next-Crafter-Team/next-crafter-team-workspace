@@ -8,7 +8,8 @@
     "scheme": "cementerioideas",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.carlosfabriciodev.CementerioIdeas"
     },
     "android": {
       "adaptiveIcon": {
@@ -33,7 +34,10 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "@clerk/expo",
+      "expo-secure-store",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,
