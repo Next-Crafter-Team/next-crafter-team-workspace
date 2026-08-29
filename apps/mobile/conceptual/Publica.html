@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>notion-clone-research — Cementerio de Ideas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg: #0E0808;
+    --bg-raised: #170D0D;
+    --bg-card: #170D0D;
+    --stone: #A8938C;
+    --stone-dim: #5E4C48;
+    --bone: #F3E9E1;
+    --ember: #E3432A;
+    --ember-dim: #3A1013;
+    --gold: #FCA35D;
+    --gold-dim: #3E2A15;
+    --line: rgba(243,233,225,0.09);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background: var(--bg); color: var(--bone); font-family:'Inter', sans-serif; }
+
+  nav{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 18px 44px; border-bottom:1px solid var(--line);
+  }
+  .brand{ font-family:'Fraunces', serif; font-size:15px; font-weight:500; display:flex; align-items:center; gap:8px;}
+  .brand .mark{ width:8px; height:8px; border-radius:2px; background: var(--ember);}
+  .nav-links{ display:flex; gap:24px; font-size:13px; color: var(--stone);}
+  .nav-links a{ color:inherit; text-decoration:none; }
+  .nav-links a:hover{ color: var(--bone); }
+  .btn-signin{ border:1px solid var(--line); border-radius:6px; padding:7px 14px; font-size:12px; color: var(--stone); background:transparent; cursor:pointer;}
+
+  main{ max-width: 760px; margin: 0 auto; padding: 56px 24px 100px; }
+
+  .breadcrumb{ font-size:12px; color: var(--stone-dim); margin-bottom: 22px; }
+  .breadcrumb a{ color: var(--stone); text-decoration:none; }
+
+  .status-row{ display:flex; align-items:center; gap:10px; margin-bottom: 18px; }
+  .status-pill{ font-size:10px; text-transform:uppercase; letter-spacing:0.06em; padding:4px 10px; border-radius:20px; border:1px solid var(--ember-dim); color: var(--ember); background: rgba(227,67,42,0.1);}
+  .origin-pill{ font-size:10px; color: var(--stone-dim); display:flex; align-items:center; gap:5px; }
+
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:34px; letter-spacing:-0.01em; margin-bottom:10px; line-height:1.15;}
+  .repo-line{ font-family:'JetBrains Mono', monospace; font-size:13px; color: var(--stone); margin-bottom: 28px;}
+  .repo-line a{ color: var(--gold); text-decoration:none; border-bottom:1px dashed var(--gold-dim); }
+
+  .meta-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:1px; background: var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom: 40px;}
+  .meta-cell{ background: var(--bg-card); padding: 14px 16px; }
+  .meta-cell .label{ font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color: var(--stone-dim); margin-bottom:6px;}
+  .meta-cell .value{ font-family:'Fraunces', serif; font-size:18px; font-weight:500; color: var(--bone);}
+  .meta-cell .value.accent{ color: var(--ember); }
+
+  section{ margin-bottom: 36px; }
+  section h2{ font-family:'Fraunces', serif; font-size:15px; font-weight:500; color: var(--gold); margin-bottom:12px; text-transform:uppercase; letter-spacing:0.04em; font-size:11px;}
+  section p{ font-size:15px; line-height:1.75; color: #DCD0C8; }
+
+  .artifacts-list{ display:flex; flex-direction:column; gap:8px; }
+  .artifact-item{ display:flex; align-items:center; gap:10px; padding:10px 14px; background: var(--bg-card); border:1px solid var(--line); border-radius:8px; font-size:13px; color: var(--stone);}
+  .artifact-item .ic{ color: var(--gold); font-size:14px; }
+  .artifact-item a{ color: var(--bone); text-decoration:none; }
+  .artifact-item a:hover{ color: var(--gold); }
+
+  .lineage{ display:flex; flex-direction:column; gap:0; border-left: 1px solid var(--ember-dim); padding-left: 20px; margin-left: 6px;}
+  .lineage-item{ position:relative; padding-bottom: 22px; }
+  .lineage-item:last-child{ padding-bottom:0; }
+  .lineage-item::before{ content:''; position:absolute; left:-25px; top:4px; width:9px; height:9px; border-radius:50%; background: var(--bg); border:2px solid var(--ember);}
+  .lineage-item .who{ font-size:13px; font-weight:500; color: var(--bone);}
+  .lineage-item .what{ font-size:12px; color: var(--stone); margin-top:2px; line-height:1.5;}
+  .lineage-item .when{ font-size:11px; color: var(--stone-dim); margin-top:4px;}
+
+  .reactions-bar{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 40px; }
+  .reaction-chip{ font-size:12px; padding:7px 13px; border-radius:20px; border:1px solid var(--line); color: var(--stone); background: var(--bg-card); cursor:pointer; display:flex; align-items:center; gap:6px;}
+  .reaction-chip:hover{ border-color: var(--stone-dim); color: var(--bone); }
+  .reaction-chip b{ color: var(--gold); font-weight:500;}
+
+  .cta-card{
+    background: linear-gradient(135deg, rgba(227,67,42,0.1), rgba(252,163,93,0.05));
+    border:1px solid var(--ember-dim); border-radius:14px; padding: 28px 30px;
+    display:flex; flex-direction:column; gap:14px; align-items:flex-start;
+  }
+  .cta-card h3{ font-family:'Fraunces', serif; font-size:19px; font-weight:500; }
+  .cta-card p{ font-size:13px; color: var(--stone); line-height:1.6; max-width: 480px;}
+  .btn-revive{ background: var(--ember); border:none; color: #1A0908; font-weight:600; font-size:14px; padding:12px 22px; border-radius:8px; cursor:pointer; font-family:'Inter';}
+  .btn-revive:hover{ background: var(--gold); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand"><span class="mark"></span>Cementerio de Ideas</div>
+  <div class="nav-links">
+    <a href="#">Explorar</a>
+    <a href="#">Mis recordatorios</a>
+    <a href="#">Cómo funciona</a>
+  </div>
+  <button class="btn-signin">Iniciar sesión</button>
+</nav>
+
+<main>
+  <div class="breadcrumb"><a href="#">Cementerio</a> / <a href="#">Side-projects</a> / notion-clone-research</div>
+
+  <div class="status-row">
+    <span class="status-pill">Enterrada · pública</span>
+    <span class="origin-pill">◆ Importado desde GitHub</span>
+  </div>
+
+  <h1>Clon de Notion para equipos de research</h1>
+  <div class="repo-line">github.com/<a href="#">tu-usuario/notion-clone-research</a> · código oculto — solo la autopsia es pública</div>
+
+  <div class="meta-grid">
+    <div class="meta-cell"><div class="label">Enterrada</div><div class="value">Hace 4 meses</div></div>
+    <div class="meta-cell"><div class="label">Reacciones</div><div class="value accent">41</div></div>
+    <div class="meta-cell"><div class="label">Resurrecciones</div><div class="value">0</div></div>
+    <div class="meta-cell"><div class="label">Stack</div><div class="value" style="font-family:'JetBrains Mono',monospace; font-size:14px;">Python</div></div>
+  </div>
+
+  <section>
+    <h2>Por qué murió</h2>
+    <p>Empezamos a construir un clon de Notion orientado a equipos de research en universidades. A las tres semanas de arrancar, Notion lanzó Notion AI con funciones muy cercanas a lo que estábamos planeando como diferenciador. El equipo perdió la motivación antes de tener un MVP usable — no fue un problema técnico, fue un problema de convicción sobre si valía la pena seguir.</p>
+  </section>
+
+  <section>
+    <h2>Qué se aprendió</h2>
+    <p>Validar la diferenciación real del producto antes de escribir la primera línea de código, no después. También: la velocidad de las herramientas grandes para copiar features de nicho es mayor de lo que asumimos.</p>
+  </section>
+
+  <section>
+    <h2>Artefactos que quedaron</h2>
+    <div class="artifacts-list">
+      <div class="artifact-item"><span class="ic">◆</span> Autopsia escrita por el creador original — <a href="#">ver texto completo</a></div>
+      <div class="artifact-item"><span class="ic">◆</span> 3 mockups de Figma — <a href="#">ver diseños</a></div>
+      <div class="artifact-item"><span class="ic">◆</span> Repositorio (código oculto, se comparte al reclamar)</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Linaje</h2>
+    <div class="lineage">
+      <div class="lineage-item">
+        <div class="who">Enterrada por @tu-usuario</div>
+        <div class="what">Escribió la autopsia original y marcó el repo como segmentado.</div>
+        <div class="when">Hace 4 meses</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="reactions-bar">
+    <button class="reaction-chip">🕯️ RIP <b>41</b></button>
+    <button class="reaction-chip">Yo también lo intenté <b>9</b></button>
+    <button class="reaction-chip">Esto tiene que existir <b>17</b></button>
+  </div>
+
+  <div class="cta-card">
+    <h3>¿Vos serías quien la resucite?</h3>
+    <p>Si reclamás esta idea, heredás la autopsia completa, los artefactos que dejó el creador original y el linaje del proyecto. El creador original recibe una notificación y queda registrado como el punto de partida.</p>
+    <button class="btn-revive">Reclamar y resucitar →</button>
+  </div>
+</main>
+
+</body>
+</html>
