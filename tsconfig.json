@@ -1,5 +1,7 @@
 {
   "extends": "./tsconfig.base.json",
-  "include": ["packages/*/src/**/*.ts", "packages/*/src/**/*.tsx", "convex/**/*.ts"],
+  // Only the modules that have no tsconfig of their own. `apps/mobile` and
+  // `packages/github` ship theirs and are typechecked by their own scripts.
+  "include": ["packages/auth/src/**/*.ts", "packages/auth/src/**/*.tsx", "convex/**/*.ts"],
   "exclude": ["node_modules", "**/node_modules"]
 }
