@@ -1,6 +1,6 @@
 # Spec: module layout
 
-_Baseline. Last updated by `module-contracts-add-modules` (archived)._
+_Baseline. Last updated by `module-contracts-add-panel-modules` (archived)._
 
 ## Requirement: named MVP modules
 
@@ -18,6 +18,9 @@ The MVP MUST use these folders, each with `CONTRACT.md`:
 | manual-entry | `packages/manual-entry/` |
 | reactions | `packages/reactions/` |
 | notifications | `packages/notifications/` |
+| reminders | `packages/reminders/` |
+| saved-ideas | `packages/saved-ideas/` |
+| admin | `packages/admin/` |
 
 YouTube, Luma, Zernio, TikTok, Instagram, and LinkedIn connectors (live API integrations) MUST NOT be added without a dedicated change — hand-typed content via `manual-entry` is not an exception to this. No identity provider other than Clerk (via `packages/auth`) MUST be added.
 
@@ -37,12 +40,22 @@ convex              → packages/github
 convex              → packages/manual-entry → packages/domain
 convex              → packages/reactions    → packages/repository, packages/user (types only)
 convex              → packages/notifications → packages/repository, packages/user (types only)
+convex              → packages/reminders    → packages/repository, packages/user (types only)
+convex              → packages/saved-ideas  → packages/repository, packages/user (types only)
+convex              → packages/admin        → packages/user (role/status), packages/repository (types only), packages/github (read-only, github_installations)
 convex              → packages/repository → packages/user
 convex              → packages/domain
 packages/auth       → packages/user
 ```
 
-`packages/reactions` and `packages/notifications` MUST NOT import each other or `packages/github`/`packages/auth` internals — only `convex` composes all of them.
+`packages/reactions`, `packages/notifications`, `packages/reminders`, `packages/saved-ideas`, and `packages/admin` MUST NOT import each other or `packages/github`/`packages/auth` internals — only `convex` composes all of them. `convex` owns two crons: `process-reminders` (drives `packages/reminders`) and a metrics-aggregation job that writes `metrics_daily` for `packages/admin`. Both write to `job_runs`, which `admin.system.health` reads.
+
+### Scenario: admin reads github_installations without owning it
+
+- GIVEN `packages/admin` needs `activeInstallations` for system health
+- WHEN it's implemented
+- THEN it MUST read `github_installations` via a `convex` query
+- AND MUST NOT import `packages/github` or touch GitHub App secrets/tokens
 
 ### Scenario: forbidden import
 
