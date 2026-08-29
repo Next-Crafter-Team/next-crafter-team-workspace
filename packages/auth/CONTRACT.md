@@ -8,6 +8,7 @@ Business identity and session, via Clerk. Sole bridge between Clerk and everythi
 - **Default sign-in method: Google** (Clerk Social Connection), configured as the primary option in the Clerk Dashboard. Email/password MAY stay enabled as a secondary method, never the default path.
 - `requireUser(ctx)` — Convex helper, throws if no valid session
 - `auth.getCurrentUser({})` — Convex query, agnostic shape
+- `auth.ensureUser({})` — Convex mutation, creates the row if the webhook has not landed yet
 - `useBusinessAuth()` — Expo wrapper (`getCurrentUser`, `isSignedIn`, `isLoading`, `signOut`, `openSignIn`)
 - `users` table sync from Clerk `user.created|updated|deleted` webhook, plus lazy sync fallback
 - Mounting `<ClerkProvider>` + `<ConvexProviderWithClerk>` in `apps/mobile`
@@ -23,7 +24,8 @@ Business identity and session, via Clerk. Sole bridge between Clerk and everythi
 ```ts
 // Convex
 requireUser(ctx) → Doc<"users">
-auth.getCurrentUser({}) → { id: Id<"users">, email: string, name: string | null } | null
+auth.getCurrentUser({}) → { id: Id<"users">, email: string, name: string | null, imageUrl: string | null } | null
+auth.ensureUser({}) → { id: Id<"users">, email: string, name: string | null, imageUrl: string | null }
 
 // Expo
 useBusinessAuth(): {
@@ -42,6 +44,10 @@ Clerk Secret Key MUST stay in Convex env vars. Publishable Key is public and liv
 ## Failure modes
 
 Missing/stale `users` row on a valid JWT MUST be handled by lazy sync, not a hard failure. Revoked session MUST fail the Convex call and MUST be handled by the caller with `openSignIn()`, never retried silently.
+
+`requireUser(ctx)` lazy-creates the row in a mutation, where a write is possible. In a query it throws `USER_NOT_SYNCED` instead of inventing a document id, because a synthetic id could be persisted as `repository.ownerUserId`. `useBusinessAuth()` runs `auth.ensureUser` once per sign-in, so a query never observes a signed-in user without a row. Queries that tolerate anonymous visitors MUST use `getCurrentUser(ctx)`, which returns `null` and never throws.
+
+Errors are `ConvexError` with `{ code, message }`; `code` is `NOT_SIGNED_IN` or `USER_NOT_SYNCED`.
 
 ## Forbidden imports
 

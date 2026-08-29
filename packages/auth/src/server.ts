@@ -50,8 +50,8 @@ export const businessUserValidator = v.object({
   imageUrl: v.union(v.string(), v.null()),
 });
 
-export function toBusinessUser(doc: UserDoc): BusinessUser {
-  return { id: doc._id, email: doc.email, name: doc.name, imageUrl: doc.imageUrl };
+export function toBusinessUser(doc: UserDoc) {
+  return { id: doc._id, email: doc.email, name: doc.name, imageUrl: doc.imageUrl } satisfies BusinessUser;
 }
 
 function authError(code: AuthErrorData["code"], message: string): ConvexError<AuthErrorData> {
@@ -123,8 +123,48 @@ function canWrite(ctx: AuthQueryCtx | AuthMutationCtx): ctx is AuthMutationCtx {
   return "insert" in ctx.db;
 }
 
+/**
+ * A svix-verified Clerk webhook body.
+ *
+ * Deliberately opaque: `convex/` routes one of these from `http.ts` to
+ * `applyClerkEvent` without ever naming a Clerk type, which is what
+ * `specs/auth.md` means by "no module outside `packages/auth` references Clerk
+ * webhook payloads directly".
+ */
+export type ClerkWebhookPayload = Record<string, unknown>;
+
+/** What `applyClerkEvent` did, for the caller to log without inspecting Clerk data. */
+export type ClerkEventOutcome = "upserted" | "anonymized" | "ignored";
+
+/**
+ * Applies a verified Clerk webhook event to the `users` table.
+ *
+ * The payload is only trustworthy because `verifyClerkWebhook` checked its
+ * signature first; this function assumes that already happened.
+ */
+export async function applyClerkEvent(
+  ctx: AuthMutationCtx,
+  payload: ClerkWebhookPayload,
+): Promise<ClerkEventOutcome> {
+  const event = payload as unknown as WebhookEvent;
+  switch (event.type) {
+    case "user.created":
+    case "user.updated":
+      await upsertFromClerk(ctx, event.data);
+      return "upserted";
+    case "user.deleted": {
+      const clerkId = event.data.id;
+      if (clerkId === undefined) return "ignored";
+      await deleteFromClerk(ctx, clerkId);
+      return "anonymized";
+    }
+    default:
+      return "ignored";
+  }
+}
+
 /** Applies a Clerk `user.created` / `user.updated` payload to the `users` table. */
-export async function upsertFromClerk(ctx: AuthMutationCtx, data: UserJSON): Promise<void> {
+async function upsertFromClerk(ctx: AuthMutationCtx, data: UserJSON): Promise<void> {
   const attrs = {
     clerkId: data.id,
     email: primaryEmail(data),
@@ -148,7 +188,7 @@ export async function upsertFromClerk(ctx: AuthMutationCtx, data: UserJSON): Pro
  * user buried keep a valid `ownerUserId`, and lineage stays readable. Only the
  * personal fields go.
  */
-export async function deleteFromClerk(ctx: AuthMutationCtx, clerkId: string): Promise<void> {
+async function deleteFromClerk(ctx: AuthMutationCtx, clerkId: string): Promise<void> {
   const existing = await findByClerkId(ctx, clerkId);
   if (existing === null) return;
   await ctx.db.patch(existing._id, {
@@ -168,7 +208,7 @@ export async function deleteFromClerk(ctx: AuthMutationCtx, clerkId: string): Pr
 export async function verifyClerkWebhook(
   request: Request,
   secret: string,
-): Promise<WebhookEvent | null> {
+): Promise<ClerkWebhookPayload | null> {
   const payload = await request.text();
   const headers = {
     "svix-id": request.headers.get("svix-id") ?? "",
@@ -177,7 +217,7 @@ export async function verifyClerkWebhook(
   };
 
   try {
-    return new Webhook(secret).verify(payload, headers) as WebhookEvent;
+    return new Webhook(secret).verify(payload, headers) as ClerkWebhookPayload;
   } catch {
     return null;
   }
