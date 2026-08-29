@@ -27,9 +27,10 @@
 
 ## 4. Manual verification (needs real Clerk and Convex credentials)
 
-- [ ] 4.1 `npx convex dev` against a real deployment; set `CLERK_JWT_ISSUER_DOMAIN`
-- [ ] 4.2 Enable Google as the default Social Connection in the Clerk Dashboard
+- [x] 4.1 Convex deployment with `CLERK_JWT_ISSUER_DOMAIN` set (local deployment; a hosted one still needed for devices)
+- [x] 4.2 Google enabled as the default Social Connection
+- [x] 4.2b JWT template `convex` created with the `aud`/`email`/`name`/`picture` claims — see `verification.md`
 - [ ] 4.3 Register `<convex-site-url>/clerk/webhook` for `user.created|updated|deleted`; set `CLERK_WEBHOOK_SECRET`
 - [ ] 4.4 Sign in with Google on a device; confirm the screen renders the email from the Convex query
-- [ ] 4.5 Confirm exactly one `users` row exists for that `clerkId`
+- [x] 4.5 Exactly one `users` row per `clerkId`, verified over four `ensureUser` calls
 - [ ] 4.6 Revoke the session in the Clerk Dashboard; confirm the app routes back to `openSignIn()`

@@ -41,6 +41,25 @@ useBusinessAuth(): {
 
 Clerk Secret Key MUST stay in Convex env vars. Publishable Key is public and lives in the Expo client. Webhooks MUST verify the svix signature before processing. Convex validates the Clerk JWT (`convex/auth.config.ts`); it MUST NOT issue or store its own session tokens.
 
+### Required Clerk setup
+
+A Clerk instance MUST have a JWT template named exactly `convex`. Without it every call is silently unauthenticated: `ConvexProviderWithClerk` asks for `getToken({ template: "convex" })` whenever the session token's `aud` is not already `convex`, and `auth.config.ts` rejects a token whose audience does not match `applicationID: "convex"`.
+
+Its claims MUST be:
+
+```json
+{
+  "aud": "convex",
+  "email": "{{user.primary_email_address}}",
+  "name": "{{user.full_name}}",
+  "picture": "{{user.image_url}}"
+}
+```
+
+`aud` alone is not enough. Convex maps `email` / `name` / `picture` onto the identity that `requireUser` reads, so a template missing them creates `users` rows with an empty email and a null name until the webhook lands — and a deployment with no webhook configured never fills them in.
+
+Google MUST be enabled as a Social Connection and left as the primary option. `user_model.first_name` and `user_model.last_name` MUST be enabled, or `{{user.full_name}}` resolves empty.
+
 ## Failure modes
 
 Missing/stale `users` row on a valid JWT MUST be handled by lazy sync, not a hard failure. Revoked session MUST fail the Convex call and MUST be handled by the caller with `openSignIn()`, never retried silently.
