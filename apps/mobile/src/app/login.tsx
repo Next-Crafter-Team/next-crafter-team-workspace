@@ -1,5 +1,6 @@
+import { useBusinessAuth } from '@workspace/auth/client';
 import { useRouter, type Href } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -15,10 +16,18 @@ import { Cementerio as C, CementerioFonts as F } from '@/constants/cementerio';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const auth = useBusinessAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const enter = () => router.replace('/admin' as Href);
+  // Only a real Clerk session opens the panel. The redirect waits for the
+  // session instead of firing on button press, so a cancelled sign-in leaves
+  // the user here rather than inside a panel they never authenticated for.
+  useEffect(() => {
+    if (auth.isSignedIn()) router.replace('/admin' as Href);
+  }, [auth, router]);
+
+  const enter = () => auth.openSignIn();
 
   return (
     <View style={styles.root}>
@@ -48,7 +57,7 @@ export default function LoginScreen() {
               <Pressable
                 style={({ pressed }) => [styles.ghBtn, pressed && styles.pressed]}
                 onPress={enter}>
-                <Text style={styles.ghBtnText}>&#9670;  Continuar con GitHub</Text>
+                <Text style={styles.ghBtnText}>&#9670;  Continuar con Google</Text>
               </Pressable>
 
               <View style={styles.divider}>
