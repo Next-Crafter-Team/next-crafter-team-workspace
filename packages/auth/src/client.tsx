@@ -5,13 +5,14 @@
  * It never imports a Clerk hook, a Clerk type, or `ConvexProviderWithClerk`
  * itself — that is the whole point of this file (`specs/auth.md`).
  */
-import { ClerkProvider, useAuth } from "@clerk/expo";
+import { ClerkProvider, useAuth, useSSO } from "@clerk/expo";
 import { useHostedAuth } from "@clerk/expo/hosted-auth";
 import { tokenCache } from "@clerk/expo/token-cache";
 import { ConvexReactClient, useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { makeFunctionReference } from "convex/server";
 import { useCallback, useEffect, useMemo, type ReactNode } from "react";
+import { Platform } from "react-native";
 
 import type { BusinessUser } from "./types";
 
@@ -70,16 +71,24 @@ export function useBusinessAuth(): BusinessAuth {
   const { isLoading: isConvexLoading, isAuthenticated } = useConvexAuth();
   const { signOut } = useAuth();
   const { startHostedAuth } = useHostedAuth();
+  const { startSSOFlow } = useSSO();
   const user = useQuery(getCurrentUserRef, isAuthenticated ? {} : "skip");
 
-  // Clerk's Account Portal, opened in a system browser session. It renders
-  // whatever the Dashboard has configured, so Google stays the default sign-in
-  // method without this module hard-coding a strategy.
   const openSignIn = useCallback(() => {
-    void startHostedAuth().catch(() => {
+    // Hosted auth returns to the app through a custom-scheme callback derived
+    // from the bundle identifier, and `@clerk/expo` rejects an http(s) redirect
+    // outright ("Hosted auth requires a custom-scheme redirect URL in Expo"),
+    // so on web it cannot run at all. Web falls back to the SSO redirect flow,
+    // which defaults to the current path.
+    const flow =
+      Platform.OS === "web"
+        ? startSSOFlow({ strategy: "oauth_google" })
+        : startHostedAuth();
+
+    void flow.catch(() => {
       // Cancelling the browser session is a normal outcome, not an error state.
     });
-  }, [startHostedAuth]);
+  }, [startHostedAuth, startSSOFlow]);
 
   return {
     getCurrentUser: () => user ?? null,
