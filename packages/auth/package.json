@@ -1,0 +1,25 @@
+{
+  "name": "@workspace/auth",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Business identity and session via Clerk. Sole bridge between Clerk and every other module.",
+  "type": "module",
+  "exports": {
+    "./types": "./src/types.ts",
+    "./server": "./src/server.ts",
+    "./client": "./src/client.tsx"
+  },
+  "dependencies": {
+    "@clerk/backend": "^3.16.13",
+    "svix": "^2.1.0"
+  },
+  "peerDependencies": {
+    "@clerk/expo": "^4.6.1",
+    "convex": "^1.45.0",
+    "react": "*"
+  },
+  "peerDependenciesMeta": {
+    "@clerk/expo": { "optional": true },
+    "react": { "optional": true }
+  }
+}
