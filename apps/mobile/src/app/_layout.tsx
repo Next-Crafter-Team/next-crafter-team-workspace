@@ -23,6 +23,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="login" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
           <Stack.Screen name="admin" />
+          <Stack.Screen name="reminder" options={{ animation: 'slide_from_bottom' }} />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>

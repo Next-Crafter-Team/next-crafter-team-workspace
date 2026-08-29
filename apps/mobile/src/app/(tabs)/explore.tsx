@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { SwipeDeck, type SwipeDeckHandle, type SwipeDir } from '@/components/explore/swipe-deck';
 import { Cementerio as C, CementerioFonts as F } from '@/constants/cementerio';
 import { BottomTabInset } from '@/constants/theme';
-import { GRAVES, STACKS, type Grave } from '@/data/graves';
+import { GRAVES, type Grave } from '@/data/graves';
 
 const GESTURES: Record<
   SwipeDir,
@@ -21,18 +21,12 @@ export default function ExploreScreen() {
   const deckRef = useRef<SwipeDeckHandle>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [activeFilter, setActiveFilter] = useState('Todo');
   const [resetKey, setResetKey] = useState(0);
   const [remaining, setRemaining] = useState(0);
   const [saved, setSaved] = useState(0);
   const [passed, setPassed] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [sheetGrave, setSheetGrave] = useState<Grave | null>(null);
-
-  const filtered = useMemo(
-    () => (activeFilter === 'Todo' ? GRAVES : GRAVES.filter((g) => g.stack === activeFilter)),
-    [activeFilter],
-  );
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -56,13 +50,6 @@ export default function ExploreScreen() {
     setPassed(0);
   }, []);
 
-  const onPickFilter = useCallback((stack: string) => {
-    setActiveFilter(stack);
-    setResetKey((k) => k + 1);
-    setSaved(0);
-    setPassed(0);
-  }, []);
-
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -74,37 +61,11 @@ export default function ExploreScreen() {
           </View>
         </View>
 
-        <View style={styles.filterRailWrap}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.filterRail}
-            contentContainerStyle={styles.filterRailContent}>
-            {STACKS.map((stack) => {
-              const active = stack === activeFilter;
-              return (
-                <Pressable
-                  key={stack}
-                  onPress={() => onPickFilter(stack)}
-                  style={[styles.fChip, active && styles.fChipActive]}>
-                  <Text
-                    style={[
-                      stack === 'Todo' ? styles.fChipText : styles.fChipTextMono,
-                      active && styles.fChipTextActive,
-                    ]}>
-                    {stack}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        </View>
-
         <View style={styles.deckWrap}>
           <SwipeDeck
-            key={`${activeFilter}-${resetKey}`}
+            key={resetKey}
             ref={deckRef}
-            data={filtered}
+            data={GRAVES}
             onResolve={handleResolve}
             onRemaining={setRemaining}
             onTapCard={setSheetGrave}
@@ -160,7 +121,7 @@ export default function ExploreScreen() {
         <Pressable
           style={styles.autopsyBtn}
           onPress={() => {
-            const top = filtered[filtered.length - remaining];
+            const top = GRAVES[GRAVES.length - remaining];
             if (top) setSheetGrave(top);
           }}>
           <Text style={styles.autopsyBtnText}>Tocá la lápida para leer la autopsia  &#8250;</Text>
@@ -189,22 +150,18 @@ export default function ExploreScreen() {
             <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={styles.sEyebrow}>AUTOPSIA · VISTA RÁPIDA</Text>
               <Text style={styles.sTitle}>{sheetGrave.title}</Text>
-              <Text style={styles.sRepo}>github.com/{sheetGrave.repo} · código oculto</Text>
+              {sheetGrave.repo ? (
+                <Text style={styles.sRepo}>{sheetGrave.repo}</Text>
+              ) : null}
 
               <View style={styles.sMetrics}>
                 <View style={styles.sMetric}>
                   <Text style={styles.sMetricLabel}>ENTERRADA</Text>
                   <Text style={styles.sMetricValue}>{sheetGrave.buried}</Text>
                 </View>
-                <View style={styles.sMetric}>
+                <View style={[styles.sMetric, { borderRightWidth: 0 }]}>
                   <Text style={styles.sMetricLabel}>REACCIONES</Text>
                   <Text style={[styles.sMetricValue, { color: C.ember }]}>{sheetGrave.reactions}</Text>
-                </View>
-                <View style={[styles.sMetric, { borderRightWidth: 0 }]}>
-                  <Text style={styles.sMetricLabel}>STACK</Text>
-                  <Text style={[styles.sMetricValue, { fontFamily: F.mono, fontSize: 13 }]}>
-                    {sheetGrave.stack}
-                  </Text>
                 </View>
               </View>
 
@@ -267,23 +224,7 @@ const styles = StyleSheet.create({
   countNum: { fontSize: 12, fontWeight: '700', color: C.ember, fontFamily: F.sans },
   countLabel: { fontSize: 11, color: C.stone, fontFamily: F.sans },
 
-  filterRailWrap: { height: 46 },
-  filterRail: { flexGrow: 0 },
-  filterRailContent: { gap: 8, paddingHorizontal: 18, paddingVertical: 6, alignItems: 'center' },
-  fChip: {
-    borderWidth: 1,
-    borderColor: C.line,
-    borderRadius: 20,
-    paddingVertical: 6,
-    paddingHorizontal: 13,
-    backgroundColor: C.bgCard,
-  },
-  fChipActive: { borderColor: C.ember, backgroundColor: C.emberDim },
-  fChipText: { fontSize: 11, color: C.stone, fontFamily: F.sans },
-  fChipTextMono: { fontSize: 11, color: C.stone, fontFamily: F.mono },
-  fChipTextActive: { color: C.ember },
-
-  deckWrap: { flex: 1, marginHorizontal: 18, marginTop: 4, marginBottom: 10 },
+  deckWrap: { flex: 1, marginHorizontal: 18, marginTop: 10, marginBottom: 10 },
 
   actionBar: {
     flexDirection: 'row',

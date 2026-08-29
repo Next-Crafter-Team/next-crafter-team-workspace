@@ -3,18 +3,26 @@ import { useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CreateIdea } from '@/components/panel/create-idea';
 import { StateChip } from '@/components/state-chip';
 import { Cementerio as C, CementerioFonts as F } from '@/constants/cementerio';
-import { LINEAGE, MY_IDEAS, REMINDERS, SAVED_IDEAS } from '@/data/panel';
+import { LINEAGE, MY_IDEAS, SAVED_IDEAS, type MyIdea } from '@/data/panel';
 
-type Section = 'ideas' | 'reminders' | 'saved' | 'lineage';
+type Section = 'crear' | 'ideas' | 'saved' | 'external';
 
 const TABS: { key: Section; label: string }[] = [
+  { key: 'crear', label: 'Crear una idea' },
   { key: 'ideas', label: 'Mis ideas' },
-  { key: 'reminders', label: 'Recordatorios' },
   { key: 'saved', label: 'Guardadas' },
-  { key: 'lineage', label: 'Mi linaje' },
+  { key: 'external', label: 'Contribuciones externas' },
 ];
+
+const CAPTION: Record<Section, string> = {
+  crear: '',
+  ideas: 'Todo lo que enterraste o importaste. Los recordatorios se gestionan acá, dentro de cada idea.',
+  saved: 'Ideas de otras personas que marcaste con swipe para retomar.',
+  external: 'Ideas que enterraste y que otras personas resucitaron o continuaron: tu legado.',
+};
 
 export default function AdminPanel() {
   const router = useRouter();
@@ -25,6 +33,7 @@ export default function AdminPanel() {
   );
 
   const exit = () => (router.canGoBack() ? router.back() : router.replace('/' as Href));
+  const openReminder = (id: string) => router.push(`/reminder?id=${id}` as Href);
 
   return (
     <View style={styles.root}>
@@ -66,125 +75,52 @@ export default function AdminPanel() {
           style={styles.body}
           contentContainerStyle={[styles.bodyContent, { paddingBottom: 96 + insets.bottom }]}
           showsVerticalScrollIndicator={false}>
+          {!!CAPTION[section] && <Text style={styles.caption}>{CAPTION[section]}</Text>}
+
+          {section === 'crear' && <CreateIdea />}
+
           {section === 'ideas' &&
-            MY_IDEAS.map((idea) => {
-              const vis = visibility[idea.id];
-              return (
-                <View key={idea.id} style={styles.card}>
-                  <Text style={styles.cardTitle}>{idea.title}</Text>
-                  <Text style={styles.cardRepo}>{idea.repo}</Text>
-                  <View style={styles.cardRow}>
-                    <StateChip state={idea.state} label={idea.stateLabel} />
-                    <View style={styles.modeToggle}>
-                      <Pressable
-                        onPress={() => setVisibility((v) => ({ ...v, [idea.id]: 'private' }))}
-                        style={[styles.modeBtn, vis === 'private' && styles.modePriv]}>
-                        <Text style={[styles.modeText, vis === 'private' && styles.modeTextPriv]}>
-                          Priv
-                        </Text>
-                      </Pressable>
-                      <Pressable
-                        onPress={() => setVisibility((v) => ({ ...v, [idea.id]: 'public' }))}
-                        style={[styles.modeBtn, vis === 'public' && styles.modePub]}>
-                        <Text style={[styles.modeText, vis === 'public' && styles.modeTextPub]}>
-                          Público
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                  <Text style={styles.cardActivity}>{idea.activity}</Text>
-                </View>
-              );
-            })}
-
-          {section === 'reminders' &&
-            REMINDERS.map((r) => {
-              const last = r.step === 3;
-              return (
-                <View key={r.id} style={[styles.card, last && styles.cardLast]}>
-                  <Text style={styles.remRepo}>{r.repo}</Text>
-                  <Text style={styles.remIdea}>
-                    {r.idea} · {r.detail}
-                  </Text>
-                  <View style={styles.meter}>
-                    {[1, 2, 3].map((n) => (
-                      <View
-                        key={n}
-                        style={[
-                          styles.meterSeg,
-                          n <= r.step && (last ? styles.meterSegEmber : styles.meterSegGold),
-                        ]}
-                      />
-                    ))}
-                    <Text style={styles.meterLabel}>{r.step} / 3</Text>
-                  </View>
-
-                  {last && (
-                    <View style={styles.alert}>
-                      <Text style={styles.alertText}>
-                        <Text style={styles.alertStrong}>Último aviso. </Text>
-                        Enterrar genera un borrador de autopsia automático que revisás antes de
-                        publicar.
-                      </Text>
-                    </View>
-                  )}
-
-                  <View style={styles.remActions}>
-                    <Pressable
-                      style={[styles.remBtn, styles.remKeep]}
-                      onPress={() => Alert.alert('Recordatorio pospuesto', 'Contador reseteado y reprogramado lejos.')}>
-                      <Text style={styles.remKeepText}>Sigo con esto</Text>
-                    </Pressable>
-                    {!last && (
-                      <Pressable
-                        style={styles.remBtn}
-                        onPress={() => Alert.alert('Pospuesto', 'Se reprograma pronto sin resetear el contador.')}>
-                        <Text style={styles.remBtnText}>Posponer</Text>
-                      </Pressable>
-                    )}
-                    <Pressable
-                      style={[styles.remBtn, styles.remBury]}
-                      onPress={() =>
-                        Alert.alert(
-                          'Enterrar ahora',
-                          'La idea pasa a enterrada y se genera el borrador de autopsia.',
-                        )
-                      }>
-                      <Text style={styles.remBuryText}>
-                        {last ? 'Enterrar y generar autopsia' : 'Enterrar ahora'}
-                      </Text>
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })}
+            MY_IDEAS.map((idea) => (
+              <IdeaCard
+                key={idea.id}
+                idea={idea}
+                visibility={visibility[idea.id]}
+                onVisibility={(v) => setVisibility((prev) => ({ ...prev, [idea.id]: v }))}
+                onOpenReminder={() => openReminder(idea.id)}
+              />
+            ))}
 
           {section === 'saved' &&
             SAVED_IDEAS.map((s) => (
               <View key={s.id} style={styles.card}>
                 <Text style={styles.cardTitle}>{s.title}</Text>
-                <Text style={styles.cardRepo}>{s.repo}</Text>
+                <Text style={styles.cardSource}>{s.source}</Text>
                 <View style={styles.savedRow}>
                   <View style={styles.chip}>
-                    <Text style={styles.chipMono}>{s.stack}</Text>
+                    <Text style={styles.chipText}>{s.origin}</Text>
                   </View>
                   <Text style={styles.savedMeta}>{s.meta}</Text>
                 </View>
                 <Pressable
                   style={styles.reviveBtn}
-                  onPress={() => Alert.alert('Reclamar y resucitar', 'Heredás la autopsia, los artefactos y el linaje. El creador original recibe una notificación.')}>
+                  onPress={() =>
+                    Alert.alert(
+                      'Reclamar y resucitar',
+                      'Heredás la autopsia, los artefactos y el linaje. La persona creadora original recibe una notificación.',
+                    )
+                  }>
                   <Text style={styles.reviveBtnText}>Reclamar y resucitar  →</Text>
                 </Pressable>
               </View>
             ))}
 
-          {section === 'lineage' && (
+          {section === 'external' && (
             <View style={styles.timeline}>
               {LINEAGE.map((l) => (
                 <View key={l.id} style={styles.tlItem}>
                   <View style={[styles.tlDot, l.glow && styles.tlDotGlow]} />
                   <Text style={styles.tlTitle}>{l.title}</Text>
-                  <Text style={styles.tlRepo}>{l.repo}</Text>
+                  {!!l.source && <Text style={styles.tlSource}>{l.source}</Text>}
                   <Text style={styles.tlWhat}>{l.what}</Text>
                   <Text style={styles.tlWho}>{l.who}</Text>
                   <Text style={styles.tlWhen}>{l.when}</Text>
@@ -194,15 +130,129 @@ export default function AdminPanel() {
           )}
         </ScrollView>
 
-        {/* sticky CTA */}
-        <View style={[styles.sticky, { paddingBottom: 14 + insets.bottom }]}>
+        {/* sticky CTA — la sección "Crear una idea" trae su propio botón */}
+        {section !== 'crear' && (
+          <View style={[styles.sticky, { paddingBottom: 14 + insets.bottom }]}>
+            <Pressable style={styles.ctaBtn} onPress={() => setSection('crear')}>
+              <Text style={styles.ctaText}>＋  Crear una idea</Text>
+            </Pressable>
+          </View>
+        )}
+      </SafeAreaView>
+    </View>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Idea card — incluye la gestión del recordatorio cuando hay uno     */
+/* ------------------------------------------------------------------ */
+
+function IdeaCard({
+  idea,
+  visibility,
+  onVisibility,
+  onOpenReminder,
+}: {
+  idea: MyIdea;
+  visibility: 'private' | 'public';
+  onVisibility: (v: 'private' | 'public') => void;
+  onOpenReminder: () => void;
+}) {
+  const rem = idea.reminder;
+  const isLast = rem?.step === 3;
+
+  return (
+    <View style={[styles.card, isLast && styles.cardLast]}>
+      <Text style={styles.cardTitle}>{idea.title}</Text>
+      {!!idea.source && <Text style={styles.cardSource}>{idea.source}</Text>}
+
+      <View style={styles.cardRow}>
+        <StateChip state={idea.state} label={idea.stateLabel} />
+        <View style={styles.modeToggle}>
           <Pressable
-            style={styles.ctaBtn}
-            onPress={() => Alert.alert('Importar de GitHub', 'Conectás con Clerk y elegís qué repos traer al cementerio.')}>
-            <Text style={styles.ctaText}>Importar de GitHub</Text>
+            onPress={() => onVisibility('private')}
+            style={[styles.modeBtn, visibility === 'private' && styles.modePriv]}>
+            <Text style={[styles.modeText, visibility === 'private' && styles.modeTextPriv]}>
+              Priv
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => onVisibility('public')}
+            style={[styles.modeBtn, visibility === 'public' && styles.modePub]}>
+            <Text style={[styles.modeText, visibility === 'public' && styles.modeTextPub]}>
+              Público
+            </Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </View>
+
+      <Text style={styles.cardActivity}>{idea.activity}</Text>
+
+      {rem && (
+        <View style={styles.remBlock}>
+          <View style={styles.meter}>
+            {[1, 2, 3].map((n) => (
+              <View
+                key={n}
+                style={[
+                  styles.meterSeg,
+                  n <= rem.step && (isLast ? styles.meterSegEmber : styles.meterSegGold),
+                ]}
+              />
+            ))}
+            <Text style={styles.meterLabel}>{rem.step} / 3</Text>
+          </View>
+
+          <Text style={styles.remWhy}>{rem.inactiveLabel}.</Text>
+
+          {isLast && (
+            <View style={styles.alert}>
+              <Text style={styles.alertText}>
+                <Text style={styles.alertStrong}>Último aviso. </Text>
+                Enterrar genera un borrador de autopsia automático que revisás antes de publicar.
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.remActions}>
+            <Pressable
+              style={[styles.remBtn, styles.remKeep]}
+              onPress={() =>
+                Alert.alert(
+                  'Sigo con esto',
+                  `Contador reiniciado. Próximo aviso en ${rem.keepEveryLabel}.`,
+                )
+              }>
+              <Text style={styles.remKeepText}>Sigo con esto</Text>
+            </Pressable>
+            {!isLast && (
+              <Pressable
+                style={styles.remBtn}
+                onPress={() =>
+                  Alert.alert('Pospuesto', 'Se reprograma pronto sin resetear el contador.')
+                }>
+                <Text style={styles.remBtnText}>Posponer</Text>
+              </Pressable>
+            )}
+            <Pressable
+              style={[styles.remBtn, styles.remBury]}
+              onPress={() =>
+                Alert.alert(
+                  'Enterrar ahora',
+                  'La idea pasa a enterrada y se genera el borrador de autopsia.',
+                )
+              }>
+              <Text style={styles.remBuryText}>
+                {isLast ? 'Enterrar y generar autopsia' : 'Enterrar ahora'}
+              </Text>
+            </Pressable>
+          </View>
+
+          <Pressable onPress={onOpenReminder} hitSlop={6}>
+            <Text style={styles.remOpen}>Abrir recordatorio completo  →</Text>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
@@ -241,6 +291,7 @@ const styles = StyleSheet.create({
 
   body: { flex: 1 },
   bodyContent: { paddingHorizontal: 18, paddingTop: 6, paddingBottom: 96 },
+  caption: { fontSize: 11, lineHeight: 16, color: C.stoneDim, fontFamily: F.sans, marginBottom: 12 },
 
   card: {
     backgroundColor: C.bgCard,
@@ -253,7 +304,7 @@ const styles = StyleSheet.create({
   },
   cardLast: { borderColor: C.ember, backgroundColor: 'rgba(227,67,42,0.06)' },
   cardTitle: { fontFamily: F.serif, fontSize: 15, fontWeight: '500', color: C.bone },
-  cardRepo: { fontFamily: F.mono, fontSize: 10.5, color: C.stone, marginTop: 2 },
+  cardSource: { fontFamily: F.mono, fontSize: 10.5, color: C.stone, marginTop: 2 },
   cardRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -278,9 +329,15 @@ const styles = StyleSheet.create({
   modeTextPriv: { color: C.gold },
   modeTextPub: { color: C.ember },
 
-  remRepo: { fontFamily: F.mono, fontSize: 12.5, fontWeight: '500', color: C.bone },
-  remIdea: { fontSize: 11.5, color: C.stone, marginTop: 4, fontFamily: F.sans, lineHeight: 17 },
-  meter: { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 12 },
+  /* bloque de recordatorio dentro de la tarjeta de idea */
+  remBlock: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: C.line,
+    gap: 4,
+  },
+  meter: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   meterSeg: {
     width: 26,
     height: 5,
@@ -292,9 +349,10 @@ const styles = StyleSheet.create({
   meterSegGold: { backgroundColor: C.gold, borderColor: C.gold },
   meterSegEmber: { backgroundColor: C.ember, borderColor: C.ember },
   meterLabel: { fontSize: 10, color: C.stoneDim, marginLeft: 4, fontFamily: F.sans },
+  remWhy: { fontSize: 11, color: C.stone, fontFamily: F.sans, marginTop: 8 },
 
   alert: {
-    marginTop: 12,
+    marginTop: 10,
     borderWidth: 1,
     borderColor: C.emberDim,
     backgroundColor: 'rgba(227,67,42,0.08)',
@@ -304,7 +362,7 @@ const styles = StyleSheet.create({
   alertText: { fontSize: 11, color: C.stone, lineHeight: 16, fontFamily: F.sans },
   alertStrong: { color: C.ember, fontWeight: '600' },
 
-  remActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 13 },
+  remActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   remBtn: {
     borderWidth: 1,
     borderColor: C.line,
@@ -317,10 +375,17 @@ const styles = StyleSheet.create({
   remKeepText: { fontSize: 11.5, color: C.bone, fontWeight: '500', fontFamily: F.sans },
   remBury: { borderColor: C.ember, backgroundColor: C.emberDim },
   remBuryText: { fontSize: 11.5, color: C.ember, fontWeight: '500', fontFamily: F.sans },
+  remOpen: { fontSize: 11, color: C.gold, fontFamily: F.sans, fontWeight: '500', marginTop: 12 },
 
   savedRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10 },
-  chip: { borderWidth: 1, borderColor: C.line, borderRadius: 20, paddingVertical: 2, paddingHorizontal: 8 },
-  chipMono: { fontSize: 9.5, color: C.stone, fontFamily: F.mono },
+  chip: {
+    borderWidth: 1,
+    borderColor: C.line,
+    borderRadius: 20,
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+  },
+  chipText: { fontSize: 9.5, color: C.stone, fontFamily: F.sans },
   savedMeta: { fontSize: 10, color: C.stoneDim, fontFamily: F.sans, flex: 1 },
   reviveBtn: {
     backgroundColor: C.ember,
@@ -359,7 +424,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   tlTitle: { fontFamily: F.serif, fontSize: 14, fontWeight: '500', color: C.bone },
-  tlRepo: { fontFamily: F.mono, fontSize: 10, color: C.stone, marginTop: 2 },
+  tlSource: { fontFamily: F.mono, fontSize: 10, color: C.stone, marginTop: 2 },
   tlWhat: { fontSize: 12, color: C.stone, marginTop: 6, lineHeight: 18, fontFamily: F.sans },
   tlWho: { fontSize: 11, color: C.gold, marginTop: 6, fontFamily: F.sans },
   tlWhen: { fontSize: 10.5, color: C.stoneDim, marginTop: 3, fontFamily: F.sans },

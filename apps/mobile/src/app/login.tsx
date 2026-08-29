@@ -46,14 +46,17 @@ export default function LoginScreen() {
               </Text>
 
               <Pressable
-                style={({ pressed }) => [styles.ghBtn, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.googleBtn, pressed && styles.pressed]}
                 onPress={enter}>
-                <Text style={styles.ghBtnText}>&#9670;  Continuar con GitHub</Text>
+                <View style={styles.googleG}>
+                  <Text style={styles.googleGText}>G</Text>
+                </View>
+                <Text style={styles.googleBtnText}>Continuar con Google</Text>
               </Pressable>
 
               <View style={styles.divider}>
                 <View style={styles.line} />
-                <Text style={styles.dividerText}>o con email</Text>
+                <Text style={styles.dividerText}>o con tu email</Text>
                 <View style={styles.line} />
               </View>
 
@@ -88,7 +91,9 @@ export default function LoginScreen() {
                 <Text style={styles.enterBtnText}>Entrar</Text>
               </Pressable>
 
-              <Text style={styles.note}>Maqueta — sin autenticación real todavía (irá con Clerk).</Text>
+              <Text style={styles.note}>
+                Maqueta — sin autenticación real todavía (irá con Clerk · Google por defecto).
+              </Text>
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -117,13 +122,25 @@ const styles = StyleSheet.create({
   brand: { fontFamily: F.serif, fontSize: 14, fontWeight: '500', color: C.bone },
   title: { fontFamily: F.serif, fontSize: 24, fontWeight: '500', color: C.bone },
   sub: { fontFamily: F.sans, fontSize: 12.5, lineHeight: 19, color: C.stone, marginBottom: 6 },
-  ghBtn: {
-    backgroundColor: C.ember,
-    borderRadius: 9,
-    paddingVertical: 13,
+  googleBtn: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: C.bone,
+    borderRadius: 9,
+    paddingVertical: 12,
   },
-  ghBtnText: { color: '#1A0908', fontWeight: '700', fontSize: 13.5, fontFamily: F.sans },
+  googleG: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#1A0908',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  googleGText: { color: C.bone, fontWeight: '800', fontSize: 12, fontFamily: F.sans },
+  googleBtnText: { color: '#1A0908', fontWeight: '700', fontSize: 13.5, fontFamily: F.sans },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 4 },
   line: { flex: 1, height: 1, backgroundColor: C.line },
   dividerText: { color: C.stoneDim, fontSize: 10.5, fontFamily: F.sans },

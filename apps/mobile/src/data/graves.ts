@@ -103,11 +103,6 @@ export const GRAVES: Grave[] = [
   },
 ];
 
-export const STACKS: string[] = [
-  'Todo',
-  ...Array.from(new Set(GRAVES.map((g) => g.stack))),
-];
-
 export const STATE_LABEL: Record<GraveState, string> = {
   buried: 'Enterrada · pública',
   latent: 'Latente',

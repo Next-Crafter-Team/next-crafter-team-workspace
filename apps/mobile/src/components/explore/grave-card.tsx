@@ -29,18 +29,11 @@ export function GraveCard({ grave }: { grave: Grave }) {
 
       <Text style={styles.title}>{grave.title}</Text>
 
-      <Text style={styles.repo}>
-        github.com/<Text style={styles.repoAccent}>{grave.repo}</Text>
-      </Text>
-
-      <View style={styles.chipRow}>
-        <View style={styles.chip}>
-          <Text style={styles.chipTextMono}>{grave.stack}</Text>
-        </View>
-        <View style={styles.chip}>
-          <Text style={styles.chipText}>código oculto</Text>
-        </View>
-      </View>
+      {grave.repo ? (
+        <Text style={styles.repo} numberOfLines={1}>
+          <Text style={styles.repoAccent}>{grave.repo}</Text>
+        </Text>
+      ) : null}
 
       <Text style={styles.whyLabel}>POR QUÉ MURIÓ</Text>
       <Text style={styles.why} numberOfLines={5}>
