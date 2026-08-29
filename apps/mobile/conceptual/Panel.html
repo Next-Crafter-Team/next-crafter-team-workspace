@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel del creador — Cementerio de Ideas</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#0E0808; --bg-raised:#170D0D; --bg-card:#170D0D; --bg-input:#1D1211;
+    --stone:#A8938C; --stone-dim:#5E4C48; --bone:#F3E9E1;
+    --ember:#E3432A; --ember-dim:#3A1013; --gold:#FCA35D; --gold-dim:#3E2A15;
+    --line: rgba(243,233,225,0.09);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--bg); color:var(--bone); font-family:'Inter',sans-serif; }
+
+  /* ---------------- top controls ---------------- */
+  .controls{
+    position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;
+    padding:14px 26px; border-bottom:1px solid var(--line); background:rgba(14,8,8,0.92); backdrop-filter:blur(6px);
+  }
+  .brand{ font-family:'Fraunces',serif; font-size:14px; font-weight:500; display:flex; align-items:center; gap:7px;}
+  .brand .mark{ width:7px; height:7px; border-radius:2px; background:var(--ember);}
+  .seg{ display:flex; background:var(--bg-input); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+  .seg button{ background:transparent; border:none; color:var(--stone); font-size:12px; font-family:'Inter'; font-weight:500; padding:8px 14px; cursor:pointer;}
+  .seg button.active{ background:var(--ember-dim); color:var(--ember); }
+
+  .stage{ display:flex; justify-content:center; padding:26px 20px 70px; }
+
+  /* ================= DESKTOP SHELL ================= */
+  .shell{ display:flex; width:100%; max-width:1040px; gap:0; border:1px solid var(--line); border-radius:14px; overflow:hidden; background:var(--bg-raised); }
+
+  .sidebar{ width:210px; flex-shrink:0; border-right:1px solid var(--line); padding:18px 12px; display:flex; flex-direction:column; gap:4px; background:var(--bg); }
+  .side-brand{ font-family:'Fraunces',serif; font-size:13px; font-weight:500; display:flex; align-items:center; gap:7px; padding:6px 10px 14px;}
+  .side-brand .mark{ width:7px; height:7px; border-radius:2px; background:var(--ember);}
+  .side-group-label{ font-size:9px; text-transform:uppercase; letter-spacing:0.08em; color:var(--stone-dim); padding:12px 10px 6px;}
+  .side-item{ display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:7px; font-size:12.5px; color:var(--stone); cursor:pointer; border:1px solid transparent; }
+  .side-item:hover{ color:var(--bone); background:var(--bg-raised); }
+  .side-item.active{ background:var(--ember-dim); border-color:var(--ember-dim); color:var(--ember); font-weight:500; }
+  .side-item .ic{ width:14px; text-align:center; font-size:12px; opacity:0.9; }
+  .side-item .badge{ margin-left:auto; font-size:9.5px; background:var(--bg-input); border:1px solid var(--line); color:var(--stone); border-radius:20px; padding:1px 7px; }
+  .side-item.active .badge{ border-color:var(--ember); color:var(--ember); }
+  .side-foot{ margin-top:auto; padding:12px 10px 4px; border-top:1px solid var(--line); font-size:10.5px; color:var(--stone-dim); line-height:1.6; }
+  .side-foot b{ color:var(--stone); font-weight:500; }
+
+  .content{ flex:1; min-width:0; padding:24px 26px 30px; }
+  .section{ display:none; }
+  .section.active{ display:block; }
+
+  .sec-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:6px; }
+  .sec-title{ font-family:'Fraunces',serif; font-weight:500; font-size:22px; }
+  .sec-sub{ font-size:12px; color:var(--stone); line-height:1.6; margin-top:3px; max-width:440px; }
+  .sec-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--stone); padding:8px 13px; border-radius:7px; font-size:12px; cursor:pointer; }
+  .btn-ghost:hover{ color:var(--bone); border-color:var(--stone-dim); }
+  .btn-primary{ background:var(--ember-dim); border:1px solid var(--ember); color:var(--bone); font-weight:500; font-size:12px; padding:8px 14px; border-radius:7px; cursor:pointer; }
+
+  .toolbar{ display:flex; align-items:center; gap:12px; margin:18px 0 12px; flex-wrap:wrap; }
+  .tabs{ display:flex; gap:6px; flex-wrap:wrap; }
+  .tab{ font-size:11.5px; color:var(--stone); border:1px solid var(--line); border-radius:20px; padding:6px 12px; background:var(--bg-card); cursor:pointer; }
+  .tab.active{ background:var(--ember-dim); border-color:var(--ember); color:var(--ember); }
+  .search{ margin-left:auto; flex:0 1 220px; background:var(--bg-input); border:1px solid var(--line); border-radius:7px; color:var(--bone); padding:8px 11px; font-size:12.5px; font-family:'Inter'; }
+  .search::placeholder{ color:var(--stone-dim); }
+
+  /* -------- state chips -------- */
+  .st{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; padding:3px 9px; border-radius:20px; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+  .st::before{ content:''; width:6px; height:6px; border-radius:50%; }
+  .st-buried{ border:1px solid var(--ember); color:var(--ember); background:rgba(227,67,42,0.10); }
+  .st-buried::before{ background:var(--ember); }
+  .st-latent{ border:1px solid var(--stone-dim); color:var(--stone); }
+  .st-latent::before{ background:var(--stone-dim); }
+  .st-reminder{ border:1px dashed var(--gold); color:var(--gold); background:rgba(252,163,93,0.06); }
+  .st-reminder::before{ background:var(--gold); }
+  .st-revived{ border:1px solid var(--gold); color:var(--gold); background:rgba(252,163,93,0.10); box-shadow:0 0 12px rgba(252,163,93,0.30); }
+  .st-revived::before{ background:var(--gold); box-shadow:0 0 6px var(--gold); }
+
+  /* -------- Mis ideas: tabla de filas-tarjeta -------- */
+  .ideas{ display:flex; flex-direction:column; gap:1px; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--line); }
+  .ideas-headrow, .idea-row{
+    display:grid; grid-template-columns: 2.4fr 1fr 1.3fr 1.1fr 34px; gap:14px; align-items:center;
+    background:var(--bg-card); padding:13px 16px;
+  }
+  .ideas-headrow{ font-size:9.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--stone-dim); background:var(--bg-raised); }
+  .idea-row:hover{ background:#1B1010; }
+  .idea-main .idea-title{ font-family:'Fraunces',serif; font-size:14.5px; font-weight:500; }
+  .idea-main .idea-repo{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--stone); margin-top:3px; }
+  .idea-activity{ font-size:11px; color:var(--stone); line-height:1.45; }
+  .idea-activity .accent{ color:var(--gold); }
+
+  .mode-toggle{ display:inline-flex; background:var(--bg); border:1px solid var(--line); border-radius:7px; overflow:hidden; }
+  .mode-toggle button{ background:transparent; border:none; color:var(--stone-dim); font-size:10px; font-weight:500; padding:5px 9px; cursor:pointer; font-family:'Inter'; }
+  .mode-toggle button.active-pub{ background:var(--ember-dim); color:var(--ember); }
+  .mode-toggle button.active-priv{ background:var(--gold-dim); color:var(--gold); }
+
+  .vmenu{ position:relative; }
+  .vmenu-btn{ background:transparent; border:1px solid var(--line); color:var(--stone); width:28px; height:28px; border-radius:7px; cursor:pointer; font-size:15px; line-height:1; }
+  .vmenu-btn:hover{ color:var(--bone); border-color:var(--stone-dim); }
+  .vmenu-list{ position:absolute; right:0; top:34px; z-index:20; width:190px; background:var(--bg-raised); border:1px solid var(--line); border-radius:9px; padding:5px; display:none; box-shadow:0 20px 40px -16px rgba(0,0,0,0.7); }
+  .vmenu-list.open{ display:block; }
+  .vmenu-list button{ display:flex; width:100%; gap:9px; align-items:center; background:transparent; border:none; color:var(--stone); font-size:12px; font-family:'Inter'; padding:8px 9px; border-radius:6px; cursor:pointer; text-align:left; }
+  .vmenu-list button:hover{ background:var(--bg-card); color:var(--bone); }
+  .vmenu-list button.danger:hover{ color:var(--ember); }
+  .vmenu-list .sep{ height:1px; background:var(--line); margin:4px 2px; }
+
+  /* -------- Recordatorios -------- */
+  .rem-list{ display:flex; flex-direction:column; gap:12px; }
+  .rem-card{ background:var(--bg-card); border:1px solid var(--line); border-radius:11px; padding:16px 18px; }
+  .rem-card.last{ border-color:var(--ember); background:linear-gradient(135deg, rgba(227,67,42,0.08), transparent 70%); }
+  .rem-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+  .rem-name{ font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:500; }
+  .rem-idea{ font-size:12px; color:var(--stone); margin-top:3px; }
+  .rem-meta{ font-size:11px; color:var(--stone-dim); margin-top:8px; }
+  .meter{ display:flex; gap:5px; align-items:center; }
+  .meter-seg{ width:26px; height:5px; border-radius:3px; background:var(--bg-input); border:1px solid var(--line); }
+  .meter-seg.on{ background:var(--gold); border-color:var(--gold); }
+  .rem-card.last .meter-seg.on{ background:var(--ember); border-color:var(--ember); }
+  .meter-label{ font-size:10px; color:var(--stone-dim); margin-left:4px; }
+  .rem-alert{ margin:12px 0 0; padding:9px 12px; border:1px solid var(--ember-dim); background:rgba(227,67,42,0.08); border-radius:8px; font-size:11px; color:var(--stone); }
+  .rem-alert b{ color:var(--ember); font-weight:500; }
+  .rem-actions{ display:flex; gap:8px; margin-top:14px; flex-wrap:wrap; }
+  .rem-actions button{ font-size:11.5px; font-family:'Inter'; font-weight:500; padding:8px 13px; border-radius:7px; cursor:pointer; border:1px solid var(--line); background:transparent; color:var(--stone); }
+  .rem-actions .keep{ border-color:var(--stone-dim); color:var(--bone); }
+  .rem-actions .bury{ border-color:var(--ember); background:var(--ember-dim); color:var(--ember); }
+
+  /* -------- Guardadas -------- */
+  .saved-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:14px; }
+  .saved-card{ background:var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:9px; }
+  .saved-card .s-title{ font-family:'Fraunces',serif; font-size:15px; font-weight:500; line-height:1.25; }
+  .saved-card .s-repo{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--stone); }
+  .saved-card .s-row{ display:flex; gap:6px; flex-wrap:wrap; }
+  .chip{ font-size:9.5px; color:var(--stone); border:1px solid var(--line); border-radius:20px; padding:2px 8px; }
+  .chip.mono{ font-family:'JetBrains Mono',monospace; }
+  .saved-card .s-when{ font-size:10px; color:var(--stone-dim); }
+  .btn-revive{ margin-top:auto; background:var(--ember); border:none; color:#1A0908; font-weight:600; font-size:12px; padding:9px; border-radius:7px; cursor:pointer; font-family:'Inter'; }
+  .btn-revive:hover{ background:var(--gold); }
+
+  /* -------- Mi linaje -------- */
+  .timeline{ display:flex; flex-direction:column; border-left:1px solid var(--ember-dim); padding-left:22px; margin-left:8px; }
+  .tl-item{ position:relative; padding-bottom:26px; }
+  .tl-item:last-child{ padding-bottom:0; }
+  .tl-item::before{ content:''; position:absolute; left:-27px; top:3px; width:9px; height:9px; border-radius:50%; background:var(--bg); border:2px solid var(--ember); }
+  .tl-item.glow::before{ border-color:var(--gold); box-shadow:0 0 8px var(--gold); }
+  .tl-head{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .tl-title{ font-family:'Fraunces',serif; font-size:14px; font-weight:500; }
+  .tl-repo{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--stone); }
+  .tl-what{ font-size:12px; color:var(--stone); margin-top:5px; line-height:1.6; }
+  .tl-who{ font-size:11px; color:var(--bone); margin-top:5px; }
+  .tl-who b{ color:var(--gold); font-weight:500; }
+  .tl-when{ font-size:10.5px; color:var(--stone-dim); margin-top:3px; }
+
+  /* ================= MOBILE (phone frame) ================= */
+  .phone-frame{ width:344px; background:#000; border-radius:42px; padding:12px; box-shadow:0 30px 60px -20px rgba(0,0,0,0.6); }
+  .phone-screen{ position:relative; background:var(--bg); border-radius:32px; overflow:hidden; height:728px; display:flex; flex-direction:column; }
+  .phone-notch{ position:absolute; top:0; left:50%; transform:translateX(-50%); width:118px; height:22px; background:#000; border-radius:0 0 14px 14px; z-index:9; }
+  .phone-status{ display:flex; justify-content:space-between; padding:9px 22px 2px; font-size:11px; color:var(--stone); }
+  .m-head{ display:flex; align-items:center; gap:10px; padding:6px 16px 8px; }
+  .m-brand{ font-family:'Fraunces',serif; font-size:15px; font-weight:500; display:flex; align-items:center; gap:7px; }
+  .m-brand .mark{ width:7px; height:7px; border-radius:2px; background:var(--ember); }
+  .m-tabs{ display:flex; gap:7px; overflow-x:auto; padding:2px 16px 10px; scrollbar-width:none; }
+  .m-tabs::-webkit-scrollbar{ display:none; }
+  .m-tab{ flex:0 0 auto; font-size:11px; color:var(--stone); border:1px solid var(--line); border-radius:20px; padding:6px 12px; background:var(--bg-card); cursor:pointer; white-space:nowrap; }
+  .m-tab.active{ background:var(--ember-dim); border-color:var(--ember); color:var(--ember); }
+  .m-body{ flex:1; overflow-y:auto; padding:4px 16px 90px; }
+  .m-section{ display:none; }
+  .m-section.active{ display:block; }
+  .m-card{ background:var(--bg-card); border:1px solid var(--line); border-radius:11px; padding:14px; margin-bottom:10px; }
+  .m-card .mc-title{ font-family:'Fraunces',serif; font-size:14px; font-weight:500; }
+  .m-card .mc-repo{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--stone); margin-top:3px; }
+  .m-card .mc-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; }
+  .m-card .mc-activity{ font-size:10.5px; color:var(--stone-dim); margin-top:8px; }
+  .m-card.last{ border-color:var(--ember); background:linear-gradient(135deg, rgba(227,67,42,0.08), transparent 70%); }
+  .m-sticky{ position:absolute; left:0; right:0; bottom:0; padding:14px 16px; background:linear-gradient(180deg, transparent, var(--bg) 32%); }
+  .m-sticky button{ width:100%; background:var(--ember-dim); border:1px solid var(--ember); color:var(--bone); font-weight:500; font-size:13px; padding:12px; border-radius:8px; }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+  <div class="controls">
+    <div class="brand"><span class="mark"></span>Cementerio de Ideas · Panel del creador</div>
+    <div class="seg" id="device-seg">
+      <button data-device="desktop" class="active">Escritorio</button>
+      <button data-device="mobile">Móvil</button>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- ============================ DESKTOP ============================ -->
+    <div class="shell" id="view-desktop">
+      <aside class="sidebar">
+        <div class="side-brand"><span class="mark"></span>Cementerio</div>
+
+        <div class="side-group-label">Entrada</div>
+        <div class="side-item" data-sec="import"><span class="ic">◆</span> Importar de GitHub</div>
+        <div class="side-item" data-sec="upload"><span class="ic">＋</span> Subir contenido</div>
+
+        <div class="side-group-label">Gestión</div>
+        <div class="side-item active" data-sec="ideas"><span class="ic">▤</span> Mis ideas <span class="badge">12</span></div>
+        <div class="side-item" data-sec="reminders"><span class="ic">◔</span> Recordatorios <span class="badge">2</span></div>
+        <div class="side-item" data-sec="saved"><span class="ic">❥</span> Guardadas <span class="badge">3</span></div>
+        <div class="side-item" data-sec="lineage"><span class="ic">⌁</span> Mi linaje <span class="badge">2</span></div>
+
+        <div class="side-foot">
+          Sesión de <b>@tu-usuario</b><br>
+          12 ideas · <b>2</b> recordatorios activos<br>
+          1 idea tuya fue resucitada
+        </div>
+      </aside>
+
+      <div class="content">
+
+        <!-- ---------- IMPORT / UPLOAD (viven en Admin.html) ---------- -->
+        <section class="section" id="sec-import">
+          <div class="sec-head"><div><div class="sec-title">Importar de GitHub</div>
+            <div class="sec-sub">Esta pantalla ya está construida en <code>Admin.html</code>. Se integra como primera sección del panel: conexión vía Clerk, lista de repos con checkbox ember y toggle Privado/Público por fila.</div></div></div>
+        </section>
+        <section class="section" id="sec-upload">
+          <div class="sec-head"><div><div class="sec-title">Subir contenido</div>
+            <div class="sec-sub">Ya construida en <code>Admin.html</code>: formulario con "por qué murió / qué aprendiste", dropzone de evidencia y toggle de visibilidad, con vista previa de la lápida.</div></div></div>
+        </section>
+
+        <!-- ---------- MIS IDEAS ---------- -->
+        <section class="section active" id="sec-ideas">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Mis ideas</div>
+              <div class="sec-sub">Todo lo que enterraste o importaste. Editá la autopsia, cambiá la visibilidad o enterrá lo que sigue latente.</div>
+            </div>
+            <div class="sec-actions">
+              <button class="btn-ghost" data-goto="import">Importar de GitHub</button>
+              <button class="btn-primary" data-goto="upload">Subir contenido</button>
+            </div>
+          </div>
+
+          <div class="toolbar">
+            <div class="tabs">
+              <span class="tab active">Todas <b>·12</b></span>
+              <span class="tab">Enterradas ·6</span>
+              <span class="tab">Recordatorio ·2</span>
+              <span class="tab">Latentes ·3</span>
+              <span class="tab">Revividas ·1</span>
+            </div>
+            <input class="search" placeholder="Buscar por título o repo…">
+          </div>
+
+          <div class="ideas">
+            <div class="ideas-headrow">
+              <span>Idea</span><span>Estado</span><span>Visibilidad</span><span>Última actividad</span><span></span>
+            </div>
+
+            <div class="idea-row">
+              <div class="idea-main"><div class="idea-title">Clon de Notion para research</div><div class="idea-repo">tu-usuario/notion-clone-research</div></div>
+              <span class="st st-buried">Enterrada</span>
+              <div class="mode-toggle"><button>Priv</button><button class="active-pub">Púb · sin código</button></div>
+              <div class="idea-activity">Autopsia editada<br><span class="accent">hace 3 días</span></div>
+              <div class="vmenu"><button class="vmenu-btn">⋯</button>
+                <div class="vmenu-list">
+                  <button>✎ Editar autopsia</button>
+                  <button>◑ Cambiar visibilidad</button>
+                  <button>⚰ Enterrar de nuevo</button>
+                  <div class="sep"></div>
+                  <button class="danger">🗑 Eliminar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="idea-row">
+              <div class="idea-main"><div class="idea-title">Coach de hábitos con IA</div><div class="idea-repo">tu-usuario/habit-coach-ai</div></div>
+              <span class="st st-reminder">Recordatorio 2/3</span>
+              <div class="mode-toggle"><button class="active-priv">Privado</button><button>Público</button></div>
+              <div class="idea-activity">Próximo aviso<br>en 12 días</div>
+              <div class="vmenu"><button class="vmenu-btn">⋯</button>
+                <div class="vmenu-list">
+                  <button>✎ Editar notas</button>
+                  <button>◑ Cambiar visibilidad</button>
+                  <button>⚰ Enterrar ahora</button>
+                  <div class="sep"></div>
+                  <button class="danger">🗑 Eliminar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="idea-row">
+              <div class="idea-main"><div class="idea-title">CLI para entornos de ML</div><div class="idea-repo">tu-usuario/envctl</div></div>
+              <span class="st st-buried">Enterrada</span>
+              <div class="mode-toggle"><button>Priv</button><button class="active-pub">Público</button></div>
+              <div class="idea-activity">Sin cambios<br>hace 2 meses</div>
+              <div class="vmenu"><button class="vmenu-btn">⋯</button>
+                <div class="vmenu-list">
+                  <button>✎ Editar autopsia</button>
+                  <button>◑ Cambiar visibilidad</button>
+                  <button>⚰ Enterrar de nuevo</button>
+                  <div class="sep"></div>
+                  <button class="danger">🗑 Eliminar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="idea-row">
+              <div class="idea-main"><div class="idea-title">Editor colaborativo de partituras</div><div class="idea-repo">tu-usuario/score-together</div></div>
+              <span class="st st-latent">Latente</span>
+              <div class="mode-toggle"><button class="active-priv">Privado</button><button>Público</button></div>
+              <div class="idea-activity">Importada<br>hace 1 semana</div>
+              <div class="vmenu"><button class="vmenu-btn">⋯</button>
+                <div class="vmenu-list">
+                  <button>✎ Escribir autopsia</button>
+                  <button>◑ Cambiar visibilidad</button>
+                  <button>⚰ Enterrar ahora</button>
+                  <div class="sep"></div>
+                  <button class="danger">🗑 Eliminar</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="idea-row">
+              <div class="idea-main"><div class="idea-title">Newsletters técnicas auto-resumidas</div><div class="idea-repo">tu-usuario/digest-forge</div></div>
+              <span class="st st-revived">Revivida</span>
+              <div class="mode-toggle"><button>Priv</button><button class="active-pub">Público</button></div>
+              <div class="idea-activity">Resucitada por <span class="accent">@mfontana</span><br>hace 5 días</div>
+              <div class="vmenu"><button class="vmenu-btn">⋯</button>
+                <div class="vmenu-list">
+                  <button>✎ Ver autopsia</button>
+                  <button>⌁ Ver linaje</button>
+                  <div class="sep"></div>
+                  <button class="danger">🗑 Eliminar (borrado lógico)</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="idea-row">
+              <div class="idea-main"><div class="idea-title">App de rutinas de movilidad</div><div class="idea-repo">tu-usuario/mobility-daily</div></div>
+              <span class="st st-reminder">Recordatorio 3/3</span>
+              <div class="mode-toggle"><button class="active-priv">Privado</button><button>Público</button></div>
+              <div class="idea-activity"><span class="accent">Última alerta — hoy</span></div>
+              <div class="vmenu"><button class="vmenu-btn">⋯</button>
+                <div class="vmenu-list">
+                  <button>✎ Editar notas</button>
+                  <button>◑ Cambiar visibilidad</button>
+                  <button>⚰ Enterrar ahora</button>
+                  <div class="sep"></div>
+                  <button class="danger">🗑 Eliminar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---------- RECORDATORIOS ---------- -->
+        <section class="section" id="sec-reminders">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Recordatorios</div>
+              <div class="sec-sub">El sistema escanea tus repos privados inactivos y te avisa. Vos solo respondés: seguir, posponer o enterrar. Al 3/3, enterrar genera un borrador de autopsia automático.</div>
+            </div>
+          </div>
+
+          <div class="toolbar" style="margin-bottom:14px;">
+            <div class="tabs">
+              <span class="tab active">Activos ·3</span>
+              <span class="tab">Pospuestos ·5</span>
+              <span class="tab">Resueltos ·8</span>
+            </div>
+          </div>
+
+          <div class="rem-list">
+            <div class="rem-card">
+              <div class="rem-top">
+                <div>
+                  <div class="rem-name">tu-usuario/habit-coach-ai</div>
+                  <div class="rem-idea">Coach de hábitos con IA · sin commits hace 5 meses</div>
+                  <div class="rem-meta">Primer aviso hace 6 semanas · pospuesto 1 vez</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="meter"><span class="meter-seg on"></span><span class="meter-seg on"></span><span class="meter-seg"></span><span class="meter-label">2 / 3</span></div>
+                </div>
+              </div>
+              <div class="rem-actions">
+                <button class="keep">Sigo con esto</button>
+                <button>Posponer</button>
+                <button class="bury">Enterrar ahora</button>
+              </div>
+            </div>
+
+            <div class="rem-card last">
+              <div class="rem-top">
+                <div>
+                  <div class="rem-name">tu-usuario/mobility-daily</div>
+                  <div class="rem-idea">App de rutinas de movilidad · sin commits hace 7 meses</div>
+                  <div class="rem-meta">Pospuesto 2 veces · este es el último aviso</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="meter"><span class="meter-seg on"></span><span class="meter-seg on"></span><span class="meter-seg on"></span><span class="meter-label">3 / 3</span></div>
+                </div>
+              </div>
+              <div class="rem-alert"><b>Último recordatorio.</b> Si enterrás ahora, se crea un <b>borrador de autopsia automático</b> con la actividad del repo; lo revisás antes de publicar.</div>
+              <div class="rem-actions">
+                <button class="keep">Sigo con esto</button>
+                <button class="bury">Enterrar y generar autopsia</button>
+              </div>
+            </div>
+
+            <div class="rem-card">
+              <div class="rem-top">
+                <div>
+                  <div class="rem-name">tu-usuario/side-crm</div>
+                  <div class="rem-idea">CRM mínimo para freelancers · sin commits hace 6 semanas</div>
+                  <div class="rem-meta">Primer aviso · hoy</div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="meter"><span class="meter-seg on"></span><span class="meter-seg"></span><span class="meter-seg"></span><span class="meter-label">1 / 3</span></div>
+                </div>
+              </div>
+              <div class="rem-actions">
+                <button class="keep">Sigo con esto</button>
+                <button>Posponer</button>
+                <button class="bury">Enterrar ahora</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---------- GUARDADAS ---------- -->
+        <section class="section" id="sec-saved">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Guardadas</div>
+              <div class="sec-sub">Ideas de otros que marcaste al explorar (swipe derecha). Reclamá cuando decidas: heredás la autopsia, los artefactos y el linaje.</div>
+            </div>
+          </div>
+          <div class="toolbar" style="margin-bottom:14px;">
+            <div class="tabs"><span class="tab active">Todas ·3</span><span class="tab">Rust ·1</span><span class="tab">TypeScript ·1</span><span class="tab">Ruby ·1</span></div>
+          </div>
+          <div class="saved-grid">
+            <div class="saved-card">
+              <div class="s-title">Pizarra infinita para diagramas ML</div>
+              <div class="s-repo">tanaka/whiteboard-ml</div>
+              <div class="s-row"><span class="chip mono">Rust</span><span class="st st-buried">Enterrada</span></div>
+              <div class="s-when">Guardada hace 2 días · 34 reacciones</div>
+              <button class="btn-revive">Reclamar y resucitar →</button>
+            </div>
+            <div class="saved-card">
+              <div class="s-title">Lector de RSS social</div>
+              <div class="s-repo">lgarcia/rss-revival</div>
+              <div class="s-row"><span class="chip mono">TypeScript</span><span class="st st-buried">Enterrada</span></div>
+              <div class="s-when">Guardada hace 5 días · 12 reacciones</div>
+              <button class="btn-revive">Reclamar y resucitar →</button>
+            </div>
+            <div class="saved-card">
+              <div class="s-title">ERP mínimo para talleres</div>
+              <div class="s-repo">pmoreau/tiny-erp</div>
+              <div class="s-row"><span class="chip mono">Ruby</span><span class="st st-buried">Enterrada</span></div>
+              <div class="s-when">Guardada hace 1 semana · 21 reacciones</div>
+              <button class="btn-revive">Reclamar y resucitar →</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---------- MI LINAJE ---------- -->
+        <section class="section" id="sec-lineage">
+          <div class="sec-head">
+            <div>
+              <div class="sec-title">Mi linaje</div>
+              <div class="sec-sub">Tu legado: ideas que enterraste y que otros retomaron. Quedás registrado como el punto de partida de cada rama.</div>
+            </div>
+          </div>
+          <div class="timeline" style="margin-top:20px;">
+            <div class="tl-item glow">
+              <div class="tl-head"><span class="tl-title">Newsletters técnicas auto-resumidas</span><span class="tl-repo">tu-usuario/digest-forge</span><span class="st st-revived">Revivida</span></div>
+              <div class="tl-what">Retomó el motor de resúmenes y cambió el modelo de precios a per-seat en lugar de por envío. Publicó su primera versión.</div>
+              <div class="tl-who">Resucitada por <b>@mfontana</b></div>
+              <div class="tl-when">Hace 5 días · reclamó a partir de tu autopsia y 3 artefactos</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-head"><span class="tl-title">Clon de Notion para research</span><span class="tl-repo">tu-usuario/notion-clone-research</span><span class="st st-buried">Enterrada</span></div>
+              <div class="tl-what">Un reclamo activo y una solicitud pendiente. Todavía nadie publicó una resurrección.</div>
+              <div class="tl-who">Reclamada por <b>@kessler</b></div>
+              <div class="tl-when">Hace 3 semanas · a la espera de la primera publicación</div>
+            </div>
+            <div class="tl-item">
+              <div class="tl-head"><span class="tl-title">Scraper de precios legacy</span><span class="tl-repo">tu-usuario/old-scraper</span><span class="st st-buried">Re-enterrada</span></div>
+              <div class="tl-what">Resucitada, mantenida 3 meses y vuelta a enterrar con una segunda autopsia encadenada a la tuya. El ciclo quedó registrado.</div>
+              <div class="tl-who">Resucitada por <b>@dev_ali</b>, luego enterrada de nuevo</div>
+              <div class="tl-when">Hace 4 meses → re-enterrada hace 1 mes</div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- ============================ MOBILE ============================ -->
+    <div class="phone-frame hidden" id="view-mobile">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="phone-status"><span>9:41</span><span>&#9679;&#9679;&#9679;&nbsp;&nbsp;&#128246;&nbsp;&nbsp;&#128267;</span></div>
+        <div class="m-head"><div class="m-brand"><span class="mark"></span>Panel</div></div>
+        <div class="m-tabs" id="m-tabs">
+          <span class="m-tab active" data-msec="ideas">Mis ideas</span>
+          <span class="m-tab" data-msec="reminders">Recordatorios</span>
+          <span class="m-tab" data-msec="saved">Guardadas</span>
+          <span class="m-tab" data-msec="lineage">Mi linaje</span>
+        </div>
+
+        <div class="m-body">
+          <!-- mobile: mis ideas -->
+          <div class="m-section active" id="m-ideas">
+            <div class="m-card">
+              <div class="mc-title">Clon de Notion para research</div>
+              <div class="mc-repo">tu-usuario/notion-clone-research</div>
+              <div class="mc-row"><span class="st st-buried">Enterrada</span>
+                <div class="mode-toggle"><button>Priv</button><button class="active-pub">Público</button></div></div>
+              <div class="mc-activity">Autopsia editada hace 3 días</div>
+            </div>
+            <div class="m-card">
+              <div class="mc-title">Coach de hábitos con IA</div>
+              <div class="mc-repo">tu-usuario/habit-coach-ai</div>
+              <div class="mc-row"><span class="st st-reminder">Recordatorio 2/3</span>
+                <div class="mode-toggle"><button class="active-priv">Privado</button><button>Púb</button></div></div>
+              <div class="mc-activity">Próximo aviso en 12 días</div>
+            </div>
+            <div class="m-card">
+              <div class="mc-title">Editor colaborativo de partituras</div>
+              <div class="mc-repo">tu-usuario/score-together</div>
+              <div class="mc-row"><span class="st st-latent">Latente</span>
+                <div class="mode-toggle"><button class="active-priv">Privado</button><button>Púb</button></div></div>
+              <div class="mc-activity">Importada hace 1 semana</div>
+            </div>
+            <div class="m-card">
+              <div class="mc-title">Newsletters auto-resumidas</div>
+              <div class="mc-repo">tu-usuario/digest-forge</div>
+              <div class="mc-row"><span class="st st-revived">Revivida</span>
+                <div class="mode-toggle"><button>Priv</button><button class="active-pub">Público</button></div></div>
+              <div class="mc-activity">Resucitada por @mfontana hace 5 días</div>
+            </div>
+          </div>
+
+          <!-- mobile: recordatorios -->
+          <div class="m-section" id="m-reminders">
+            <div class="m-card">
+              <div class="mc-title" style="font-family:'JetBrains Mono',monospace;font-size:12.5px;">tu-usuario/habit-coach-ai</div>
+              <div class="mc-activity" style="margin-top:6px;">Coach de hábitos · sin commits hace 5 meses</div>
+              <div class="meter" style="margin-top:12px;"><span class="meter-seg on"></span><span class="meter-seg on"></span><span class="meter-seg"></span><span class="meter-label">2 / 3</span></div>
+              <div class="rem-actions"><button class="keep">Sigo</button><button>Posponer</button><button class="bury">Enterrar</button></div>
+            </div>
+            <div class="m-card last">
+              <div class="mc-title" style="font-family:'JetBrains Mono',monospace;font-size:12.5px;">tu-usuario/mobility-daily</div>
+              <div class="mc-activity" style="margin-top:6px;">Rutinas de movilidad · sin commits hace 7 meses</div>
+              <div class="meter" style="margin-top:12px;"><span class="meter-seg on"></span><span class="meter-seg on"></span><span class="meter-seg on"></span><span class="meter-label">3 / 3</span></div>
+              <div class="rem-alert">Último aviso. Enterrar genera un <b>borrador de autopsia automático</b>.</div>
+              <div class="rem-actions"><button class="keep">Sigo</button><button class="bury">Enterrar y generar autopsia</button></div>
+            </div>
+            <div class="m-card">
+              <div class="mc-title" style="font-family:'JetBrains Mono',monospace;font-size:12.5px;">tu-usuario/side-crm</div>
+              <div class="mc-activity" style="margin-top:6px;">CRM para freelancers · sin commits hace 6 semanas</div>
+              <div class="meter" style="margin-top:12px;"><span class="meter-seg on"></span><span class="meter-seg"></span><span class="meter-seg"></span><span class="meter-label">1 / 3</span></div>
+              <div class="rem-actions"><button class="keep">Sigo</button><button>Posponer</button><button class="bury">Enterrar</button></div>
+            </div>
+          </div>
+
+          <!-- mobile: guardadas -->
+          <div class="m-section" id="m-saved">
+            <div class="m-card">
+              <div class="mc-title">Pizarra infinita para diagramas ML</div>
+              <div class="mc-repo">tanaka/whiteboard-ml</div>
+              <div class="mc-row"><span class="chip mono">Rust</span><span class="mc-activity" style="margin:0;">Guardada hace 2 días</span></div>
+              <button class="btn-revive" style="width:100%;margin-top:12px;">Reclamar y resucitar →</button>
+            </div>
+            <div class="m-card">
+              <div class="mc-title">Lector de RSS social</div>
+              <div class="mc-repo">lgarcia/rss-revival</div>
+              <div class="mc-row"><span class="chip mono">TypeScript</span><span class="mc-activity" style="margin:0;">Guardada hace 5 días</span></div>
+              <button class="btn-revive" style="width:100%;margin-top:12px;">Reclamar y resucitar →</button>
+            </div>
+          </div>
+
+          <!-- mobile: linaje -->
+          <div class="m-section" id="m-lineage">
+            <div class="timeline" style="margin:8px 0 0 6px;">
+              <div class="tl-item glow">
+                <div class="tl-head"><span class="tl-title">Newsletters auto-resumidas</span></div>
+                <div class="tl-what">Cambió el pricing a per-seat y publicó su versión.</div>
+                <div class="tl-who">Resucitada por <b>@mfontana</b></div>
+                <div class="tl-when">Hace 5 días</div>
+              </div>
+              <div class="tl-item">
+                <div class="tl-head"><span class="tl-title">Clon de Notion para research</span></div>
+                <div class="tl-what">Un reclamo activo, sin publicación todavía.</div>
+                <div class="tl-who">Reclamada por <b>@kessler</b></div>
+                <div class="tl-when">Hace 3 semanas</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="m-sticky"><button>Importar de GitHub</button></div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  /* device toggle */
+  document.querySelectorAll('#device-seg button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('#device-seg button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      const mobile = b.dataset.device === 'mobile';
+      document.getElementById('view-desktop').classList.toggle('hidden', mobile);
+      document.getElementById('view-mobile').classList.toggle('hidden', !mobile);
+    });
+  });
+
+  /* desktop sidebar nav */
+  function goSection(sec){
+    document.querySelectorAll('.side-item').forEach(x => x.classList.toggle('active', x.dataset.sec === sec));
+    document.querySelectorAll('.section').forEach(x => x.classList.remove('active'));
+    document.getElementById('sec-' + sec).classList.add('active');
+  }
+  document.querySelectorAll('.side-item').forEach(it => it.addEventListener('click', () => goSection(it.dataset.sec)));
+  document.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => goSection(b.dataset.goto)));
+
+  /* mobile tabs */
+  document.querySelectorAll('#m-tabs .m-tab').forEach(t => t.addEventListener('click', () => {
+    document.querySelectorAll('#m-tabs .m-tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.querySelectorAll('.m-section').forEach(x => x.classList.remove('active'));
+    document.getElementById('m-' + t.dataset.msec).classList.add('active');
+  }));
+
+  /* row action menus */
+  document.querySelectorAll('.vmenu-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const list = btn.nextElementSibling;
+      const open = list.classList.contains('open');
+      document.querySelectorAll('.vmenu-list').forEach(l => l.classList.remove('open'));
+      list.classList.toggle('open', !open);
+    });
+  });
+  document.addEventListener('click', () => document.querySelectorAll('.vmenu-list').forEach(l => l.classList.remove('open')));
+
+  /* mode-toggle demo */
+  document.querySelectorAll('.mode-toggle').forEach(mt => {
+    mt.querySelectorAll('button').forEach((b, i) => b.addEventListener('click', () => {
+      mt.querySelectorAll('button').forEach(x => { x.classList.remove('active-pub','active-priv'); });
+      b.classList.add(i === 0 ? 'active-priv' : 'active-pub');
+    }));
+  });
+
+  /* filter tabs demo */
+  document.querySelectorAll('.tabs').forEach(group => {
+    group.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => {
+      group.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+    }));
+  });
+</script>
+</body>
+</html>

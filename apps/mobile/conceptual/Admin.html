@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Cementerio de Ideas — Importar / Subir contenido</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root{
+    --bg:#0E0808; --bg-raised:#170D0D; --bg-card:#170D0D; --bg-input:#1D1211;
+    --stone:#A8938C; --stone-dim:#5E4C48; --bone:#F3E9E1;
+    --ember:#E3432A; --ember-dim:#3A1013; --gold:#FCA35D; --gold-dim:#3E2A15;
+    --line: rgba(243,233,225,0.09);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background: var(--bg); color: var(--bone); font-family:'Inter', sans-serif; padding-bottom:60px;}
+
+  /* ---- controls ---- */
+  .controls{
+    position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;
+    padding:16px 28px; border-bottom:1px solid var(--line); background: rgba(14,8,8,0.9); backdrop-filter: blur(6px);
+  }
+  .brand{ font-family:'Fraunces', serif; font-size:14px; font-weight:500; display:flex; align-items:center; gap:7px;}
+  .brand .mark{ width:7px; height:7px; border-radius:2px; background: var(--ember);}
+  .seg-group{ display:flex; gap:16px; flex-wrap:wrap;}
+  .seg{ display:flex; background: var(--bg-input); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+  .seg button{ background:transparent; border:none; color: var(--stone); font-size:12px; font-family:'Inter'; font-weight:500; padding:8px 14px; cursor:pointer;}
+  .seg button.active{ background: var(--ember-dim); color: var(--ember); }
+
+  .stage{ display:flex; justify-content:center; padding: 32px 20px; }
+  .panel{ display:none; width:100%; }
+  .panel.active{ display:block; }
+
+  /* ===== shared form styles ===== */
+  .eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color: var(--ember); margin-bottom:8px;}
+  h1{ font-family:'Fraunces', serif; font-weight:500; font-size:24px; margin-bottom:6px;}
+  .sub{ font-size:12.5px; color: var(--stone); line-height:1.6; }
+  .scope-note{ margin:14px 0 0; padding:9px 13px; border:1px solid var(--gold-dim); background: rgba(252,163,93,0.06); border-radius:8px; font-size:11.5px; color: var(--stone);}
+  .scope-note b{ color: var(--gold); font-weight:500;}
+
+  /* ===== DESKTOP: import ===== */
+  .d-wrap{ width:100%; max-width:740px; }
+  .conn-bar{ display:flex; align-items:center; gap:12px; background: var(--bg-raised); border:1px solid var(--line); border-radius:10px; padding:14px 18px; margin:20px 0 18px;}
+  .gh-icon{ width:28px; height:28px; border-radius:6px; background:#241514; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .conn-text .name{ font-size:13px; font-weight:500;}
+  .conn-text .status{ font-size:11px; color: var(--ember);}
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color: var(--stone); padding:7px 14px; border-radius:6px; font-size:12px; cursor:pointer; margin-left:auto;}
+  .toolbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; gap:12px; flex-wrap:wrap;}
+  .search{ flex:1; min-width:180px; background: var(--bg-input); border:1px solid var(--line); border-radius:6px; color: var(--bone); padding:9px 12px; font-size:13px;}
+  .count{ font-size:12px; color: var(--stone-dim); }
+  .repo-list{ display:flex; flex-direction:column; gap:1px; border:1px solid var(--line); border-radius:10px; overflow:hidden; background: var(--line);}
+  .repo-row{ background: var(--bg-raised); padding:15px 17px; display:grid; grid-template-columns: 22px 1fr auto; gap:13px; align-items:start;}
+  .check{ width:16px; height:16px; border-radius:4px; border:1px solid var(--stone-dim); margin-top:2px; position:relative;}
+  .check.checked{ background: var(--ember-dim); border-color: var(--ember);}
+  .check.checked::after{ content:''; position:absolute; left:4px; top:1px; width:4px; height:8px; border-right:1.5px solid var(--ember); border-bottom:1.5px solid var(--ember); transform: rotate(40deg);}
+  .repo-name{ font-family:'JetBrains Mono', monospace; font-size:13px; font-weight:500;}
+  .gh-badge{ font-size:9.5px; padding:2px 7px; border-radius:20px; text-transform:uppercase; letter-spacing:0.04em; border:1px solid var(--stone-dim); color: var(--stone-dim); margin-left:8px;}
+  .gh-badge.priv{ border-color: var(--gold-dim); color: var(--gold);}
+  .repo-desc{ font-size:11.5px; color: var(--stone); line-height:1.5; margin:5px 0 7px; max-width:380px;}
+  .repo-meta{ display:flex; gap:12px; font-size:10.5px; color: var(--stone-dim);}
+  .visibility-control{ display:flex; flex-direction:column; align-items:flex-end; gap:7px; min-width:180px;}
+  .mode-toggle{ display:flex; background: var(--bg); border:1px solid var(--line); border-radius:7px; overflow:hidden;}
+  .mode-toggle button{ background:transparent; border:none; color: var(--stone-dim); font-size:10.5px; font-weight:500; padding:6px 11px; cursor:pointer;}
+  .mode-toggle button.active-pub{ background: var(--ember-dim); color: var(--ember);}
+  .mode-toggle button.active-priv{ background: var(--gold-dim); color: var(--gold);}
+  .default-note{ font-size:9.5px; color: var(--stone-dim); font-style:italic; text-align:right;}
+  .footer-bar{ display:flex; justify-content:space-between; align-items:center; margin-top:20px; padding-top:16px; border-top:1px solid var(--line);}
+  .footer-note{ font-size:11.5px; color: var(--stone-dim); max-width:380px;}
+  .btn-primary{ background: var(--ember-dim); border:1px solid var(--ember); color: var(--bone); font-weight:500; font-size:13px; padding:11px 20px; border-radius:7px; cursor:pointer;}
+
+  /* ===== DESKTOP: upload content ===== */
+  .upload-grid{ display:grid; grid-template-columns: 1fr 300px; gap:26px; width:100%; max-width: 900px;}
+  .form-card{ display:flex; flex-direction:column; gap:18px; }
+  .field label{ font-size:12px; font-weight:500; display:block; margin-bottom:6px;}
+  .field .hint{ font-size:10.5px; color: var(--stone-dim); margin-bottom:7px;}
+  .field input[type=text], .field textarea, .field select{ width:100%; background: var(--bg-input); border:1px solid var(--line); border-radius:8px; color: var(--bone); padding:11px 13px; font-size:12.5px; font-family:'Inter';}
+  .field textarea{ min-height:80px; resize:vertical;}
+  .field input:focus, .field textarea:focus, .field select:focus{ outline:none; border-color: var(--ember);}
+  .row-2{ display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .dropzone{ border:1px dashed var(--stone-dim); border-radius:10px; padding:22px; text-align:center; font-size:11.5px; color: var(--stone-dim); cursor:pointer;}
+  .dropzone:hover{ border-color: var(--gold); color: var(--gold);}
+  .vis-toggle{ display:flex; background: var(--bg-input); border:1px solid var(--line); border-radius:8px; overflow:hidden; width:fit-content;}
+  .vis-toggle button{ background:transparent; border:none; color: var(--stone-dim); font-size:12px; font-weight:500; padding:9px 16px; cursor:pointer;}
+  .vis-toggle button.active-pub{ background: var(--ember-dim); color: var(--ember);}
+  .vis-toggle button.active-priv{ background: var(--gold-dim); color: var(--gold);}
+  .btn-bury{ background: var(--ember); border:none; color:#1A0908; font-weight:600; font-size:13.5px; padding:13px 20px; border-radius:8px; cursor:pointer; margin-top:6px;}
+  .preview-card{ background: var(--bg-card); border:1px solid var(--line); border-radius:12px; padding:18px; height:fit-content; position:sticky; top:80px;}
+  .preview-card .ptag{ font-size:9px; text-transform:uppercase; letter-spacing:0.05em; color: var(--gold); margin-bottom:10px;}
+  .preview-grave{ width:100%; height:110px; border-radius:6px 6px 3px 3px; background: linear-gradient(180deg, var(--ember-dim), #200E0E); border:1px solid var(--ember); display:flex; flex-direction:column; align-items:center; justify-content:center; margin-bottom:14px;}
+  .preview-grave .rip{ font-family:'Fraunces', serif; font-size:14px; color: var(--ember);}
+  .preview-title{ font-family:'Fraunces', serif; font-size:14px; font-weight:500; margin-bottom:4px;}
+  .preview-meta{ font-size:10.5px; color: var(--stone-dim);}
+
+  /* ===== phone frame ===== */
+  .phone-frame{ width: 380px; background:#000; border-radius:40px; padding:12px; box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);}
+  .phone-screen{ background: var(--bg); border-radius:30px; overflow:hidden; height: 720px; overflow-y:auto; position:relative;}
+  .phone-status{ display:flex; justify-content:space-between; padding:10px 20px 4px; font-size:11px; color: var(--stone);}
+  .phone-notch{ position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:22px; background:#000; border-radius:0 0 14px 14px; z-index:5;}
+
+  /* mobile: import */
+  .m-header{ display:flex; align-items:center; gap:10px; padding:6px 16px 12px;}
+  .m-back{ font-size:18px; color: var(--stone); }
+  .m-title{ font-family:'Fraunces', serif; font-size:16px; font-weight:500;}
+  .m-content{ padding: 0 16px 100px; }
+  .m-scope{ margin: 10px 0 14px; padding:9px 12px; border:1px solid var(--gold-dim); background: rgba(252,163,93,0.06); border-radius:8px; font-size:10.5px; color: var(--stone);}
+  .m-conn{ display:flex; align-items:center; gap:10px; background: var(--bg-raised); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:14px;}
+  .m-search{ width:100%; background: var(--bg-input); border:1px solid var(--line); border-radius:8px; color: var(--bone); padding:10px 12px; font-size:13px; margin-bottom:14px;}
+  .m-repo-card{ background: var(--bg-raised); border:1px solid var(--line); border-radius:10px; padding:14px; margin-bottom:10px;}
+  .m-repo-top{ display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;}
+  .m-repo-desc{ font-size:11.5px; color: var(--stone); line-height:1.5; margin-bottom:8px;}
+  .m-repo-meta{ font-size:10px; color: var(--stone-dim); margin-bottom:12px;}
+  .m-mode-toggle{ display:flex; background: var(--bg-input); border:1px solid var(--line); border-radius:7px; overflow:hidden; width:100%;}
+  .m-mode-toggle button{ flex:1; background:transparent; border:none; color: var(--stone-dim); font-size:11px; font-weight:500; padding:9px; cursor:pointer;}
+  .m-mode-toggle button.active-pub{ background: var(--ember-dim); color: var(--ember);}
+  .m-mode-toggle button.active-priv{ background: var(--gold-dim); color: var(--gold);}
+  .m-sticky-cta{ position:sticky; bottom:0; padding:14px 16px; background: linear-gradient(180deg, transparent, var(--bg) 30%); }
+  .m-btn-primary{ width:100%; background: var(--ember-dim); border:1px solid var(--ember); color: var(--bone); font-weight:500; font-size:13.5px; padding:13px; border-radius:8px; }
+
+  /* mobile: upload */
+  .m-field{ margin-bottom:16px; }
+  .m-field label{ font-size:12px; font-weight:500; display:block; margin-bottom:6px;}
+  .m-field .hint{ font-size:10px; color: var(--stone-dim); margin-bottom:6px;}
+  .m-field input, .m-field textarea, .m-field select{ width:100%; background: var(--bg-input); border:1px solid var(--line); border-radius:8px; color: var(--bone); padding:11px 12px; font-size:13px;}
+  .m-field textarea{ min-height:76px; resize:vertical;}
+  .m-vis-toggle{ display:flex; background: var(--bg-input); border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+  .m-vis-toggle button{ flex:1; background:transparent; border:none; color: var(--stone-dim); font-size:12px; font-weight:500; padding:10px; }
+  .m-vis-toggle button.active-pub{ background: var(--ember-dim); color: var(--ember);}
+  .m-dropzone{ border:1px dashed var(--stone-dim); border-radius:10px; padding:20px; text-align:center; font-size:11px; color: var(--stone-dim);}
+</style>
+</head>
+<body>
+
+  <div class="controls">
+    <div class="brand"><span class="mark"></span>Cementerio de Ideas</div>
+    <div class="seg-group">
+      <div class="seg" id="screen-seg">
+        <button class="active" data-screen="import">Importar proyectos</button>
+        <button data-screen="upload">Subir contenido</button>
+      </div>
+      <div class="seg" id="device-seg">
+        <button class="active" data-device="desktop">Escritorio</button>
+        <button data-device="mobile">Móvil</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- ============ DESKTOP · IMPORT ============ -->
+    <div class="panel active" id="panel-import-desktop">
+      <div class="d-wrap">
+        <div class="eyebrow">Importar origen de datos</div>
+        <h1>Traer repositorios de GitHub</h1>
+        <p class="sub">Cada repo hereda su visibilidad real de GitHub. Público puede entrar al cementerio; privado solo alimenta tus recordatorios.</p>
+        <div class="scope-note"><b>Alcance de esta fase:</b> solo GitHub, autenticación con Clerk.</div>
+        <div class="conn-bar">
+          <div class="gh-icon">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="#A8938C"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          </div>
+          <div class="conn-text"><div class="name">github.com/tu-usuario</div><div class="status">● Conectado vía Clerk</div></div>
+          <button class="btn-ghost">Reconectar</button>
+        </div>
+        <div class="toolbar"><input class="search" placeholder="Filtrar repositorios…"/><div class="count">14 repos · 3 seleccionados</div></div>
+        <div class="repo-list">
+          <div class="repo-row">
+            <div class="check checked"></div>
+            <div><div class="repo-name">habit-coach-ai <span class="gh-badge priv">Privado en GitHub</span></div>
+              <div class="repo-desc">Coach de hábitos con IA. Sin commits hace 5 meses.</div>
+              <div class="repo-meta"><span>Último commit: 5 meses</span><span>TypeScript</span></div></div>
+            <div class="visibility-control"><div class="mode-toggle"><button class="active-priv">Privado</button><button>Público</button></div>
+              <div class="default-note">Solo recordatorios</div></div>
+          </div>
+          <div class="repo-row">
+            <div class="check checked"></div>
+            <div><div class="repo-name">notion-clone-research <span class="gh-badge priv">Privado en GitHub</span></div>
+              <div class="repo-desc">Clon de Notion para research. Abandonado tras Notion AI.</div>
+              <div class="repo-meta"><span>Último commit: 4 meses</span><span>Python</span></div></div>
+            <div class="visibility-control"><div class="mode-toggle"><button>Privado</button><button class="active-pub">Público</button></div>
+              <div class="default-note">Código oculto, solo autopsia</div></div>
+          </div>
+        </div>
+        <div class="footer-bar">
+          <div class="footer-note">Los privados solo generan recordatorios personales.</div>
+          <button class="btn-primary">Importar 3 repositorios</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ DESKTOP · UPLOAD ============ -->
+    <div class="panel" id="panel-upload-desktop">
+      <div class="upload-grid">
+        <div>
+          <div class="eyebrow">Subir contenido</div>
+          <h1>Enterrar algo manualmente</h1>
+          <p class="sub">Para lo que no vive en GitHub: un borrador, un evento, una idea que nunca llegó a repo.</p>
+          <div class="form-card" style="margin-top:20px;">
+            <div class="field"><label>Título</label><input type="text" placeholder="Ej: Newsletter de resúmenes técnicos"/></div>
+            <div class="row-2">
+              <div class="field"><label>Tipo de contenido</label>
+                <select><option>Repositorio</option><option>Post</option><option>Video</option><option>Evento</option><option>Otro</option></select></div>
+              <div class="field"><label>Fecha de creación</label><input type="text" placeholder="Marzo 2025"/></div>
+            </div>
+            <div class="field"><label>Por qué murió</label><div class="hint">Esto se vuelve la autopsia pública si elegís "Público".</div>
+              <textarea placeholder="Qué pasó, por qué se abandonó..."></textarea></div>
+            <div class="field"><label>Qué aprendiste</label><textarea placeholder="La lección real, no la genérica..."></textarea></div>
+            <div class="field"><label>Evidencia (opcional)</label><div class="dropzone">Arrastrá un link, captura o archivo</div></div>
+            <div class="field"><label>Visibilidad</label>
+              <div class="vis-toggle"><button class="active-priv">Privado</button><button>Público</button></div>
+            </div>
+            <button class="btn-bury">Enterrar esta idea</button>
+          </div>
+        </div>
+        <div class="preview-card">
+          <div class="ptag">Vista previa en el cementerio</div>
+          <div class="preview-grave"><div class="rip">R.I.P.</div></div>
+          <div class="preview-title">Newsletter de resúmenes técnicos</div>
+          <div class="preview-meta">Manual · sin publicar aún</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ MOBILE · IMPORT ============ -->
+    <div class="panel" id="panel-import-mobile">
+      <div class="phone-frame"><div class="phone-notch"></div><div class="phone-screen">
+        <div class="phone-status"><span>9:41</span><span>●●●  📶  🔋</span></div>
+        <div class="m-header"><span class="m-back">←</span><span class="m-title">Importar repos</span></div>
+        <div class="m-content">
+          <div class="m-scope"><b>Solo GitHub</b> por ahora · auth con Clerk</div>
+          <div class="m-conn">
+            <div class="gh-icon" style="width:26px;height:26px;">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="#A8938C"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            </div>
+            <div><div style="font-size:12px;font-weight:500;">github.com/tu-usuario</div><div style="font-size:10px;color:var(--ember);">● Conectado</div></div>
+          </div>
+          <input class="m-search" placeholder="Filtrar repositorios…"/>
+          <div class="m-repo-card">
+            <div class="m-repo-top"><span class="repo-name" style="font-size:12.5px;">habit-coach-ai</span><div class="check checked"></div></div>
+            <div class="m-repo-desc">Coach de hábitos con IA. Sin commits hace 5 meses.</div>
+            <div class="m-repo-meta">Último commit: 5 meses · TypeScript</div>
+            <div class="m-mode-toggle"><button class="active-priv">Privado</button><button>Público</button></div>
+          </div>
+          <div class="m-repo-card">
+            <div class="m-repo-top"><span class="repo-name" style="font-size:12.5px;">notion-clone-research</span><div class="check checked"></div></div>
+            <div class="m-repo-desc">Clon de Notion. Abandonado tras Notion AI.</div>
+            <div class="m-repo-meta">Último commit: 4 meses · Python</div>
+            <div class="m-mode-toggle"><button>Privado</button><button class="active-pub">Público</button></div>
+          </div>
+        </div>
+        <div class="m-sticky-cta"><button class="m-btn-primary">Importar 2 repositorios</button></div>
+      </div></div>
+    </div>
+
+    <!-- ============ MOBILE · UPLOAD ============ -->
+    <div class="panel" id="panel-upload-mobile">
+      <div class="phone-frame"><div class="phone-notch"></div><div class="phone-screen">
+        <div class="phone-status"><span>9:41</span><span>●●●  📶  🔋</span></div>
+        <div class="m-header"><span class="m-back">←</span><span class="m-title">Subir contenido</span></div>
+        <div class="m-content">
+          <p style="font-size:11.5px; color:var(--stone); line-height:1.6; margin-bottom:16px;">Para lo que no vive en GitHub: un borrador, un evento, una idea que nunca llegó a repo.</p>
+          <div class="m-field"><label>Título</label><input placeholder="Ej: Newsletter de resúmenes"/></div>
+          <div class="m-field"><label>Tipo de contenido</label>
+            <select><option>Repositorio</option><option>Post</option><option>Video</option><option>Evento</option></select></div>
+          <div class="m-field"><label>Fecha de creación</label><input placeholder="Marzo 2025"/></div>
+          <div class="m-field"><label>Por qué murió</label><div class="hint">Se vuelve la autopsia pública si elegís "Público".</div>
+            <textarea placeholder="Qué pasó..."></textarea></div>
+          <div class="m-field"><label>Qué aprendiste</label><textarea placeholder="La lección real..."></textarea></div>
+          <div class="m-field"><label>Evidencia</label><div class="m-dropzone">Tocá para adjuntar un link o archivo</div></div>
+          <div class="m-field"><label>Visibilidad</label>
+            <div class="m-vis-toggle"><button class="active-priv">Privado</button><button>Público</button></div></div>
+        </div>
+        <div class="m-sticky-cta"><button class="m-btn-primary">Enterrar esta idea</button></div>
+      </div></div>
+    </div>
+
+  </div>
+
+<script>
+  let currentScreen = 'import';
+  let currentDevice = 'desktop';
+  function render(){
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${currentScreen}-${currentDevice}`).classList.add('active');
+  }
+  document.querySelectorAll('#screen-seg button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('#screen-seg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); currentScreen = b.dataset.screen; render();
+  }));
+  document.querySelectorAll('#device-seg button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('#device-seg button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); currentDevice = b.dataset.device; render();
+  }));
+</script>
+</body>
+</html>

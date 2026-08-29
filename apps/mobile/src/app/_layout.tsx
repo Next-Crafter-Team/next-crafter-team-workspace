@@ -1,22 +1,30 @@
-import { BusinessAuthProvider } from '@workspace/auth/client';
-import { Slot } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useColorScheme } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
-const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL;
+import { AnimatedSplashOverlay } from '@/components/animated-icon';
+import { Cementerio as C } from '@/constants/cementerio';
 
-if (!publishableKey) {
-  throw new Error('Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY. See .env.example.');
-}
-if (!convexUrl) {
-  throw new Error('Missing EXPO_PUBLIC_CONVEX_URL. See .env.example.');
-}
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const colorScheme = useColorScheme();
   return (
-    <BusinessAuthProvider publishableKey={publishableKey} convexUrl={convexUrl}>
-      <StatusBar style="light" />
-      <Slot />
-    </BusinessAuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <AnimatedSplashOverlay />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: C.bg },
+          }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="login" options={{ presentation: 'modal', animation: 'slide_from_bottom' }} />
+          <Stack.Screen name="admin" />
+        </Stack>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

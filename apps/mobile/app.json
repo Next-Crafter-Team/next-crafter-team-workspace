@@ -1,15 +1,14 @@
 {
   "expo": {
-    "name": "Cementerio de Ideas",
-    "slug": "cementerio-de-ideas",
+    "name": "CementerioIdeas",
+    "slug": "CementerioIdeas",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "cementerio",
+    "scheme": "cementerioideas",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.nextcrafter.cementerio"
+      "icon": "./assets/expo.icon"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.nextcrafter.cementerio"
+      "package": "com.carlosfabriciodev.CementerioIdeas"
     },
     "web": {
       "output": "static",
@@ -34,10 +33,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ],
-      "@clerk/expo",
-      "expo-secure-store",
-      "expo-web-browser"
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
